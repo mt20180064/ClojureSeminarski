@@ -65,10 +65,6 @@
   (flush)
   (read-line))
 
-
-
-
-
 (defn get-user-info []
   {:name (prompt "Tell me about yourself. Name?")
    :experience (Integer. (prompt "How experienced from 1 (not at all) to 5 (expert) are you with escape rooms?"))
@@ -81,8 +77,24 @@
    }
   )
 
-(def ^:dynamic *players* [])
+(defn get-room-info []
+  {:horror (Integer. (prompt "Now about the room. Is the one you are playing classified as horror? 1-yes, 2-no"))
+   :linear (Integer. (prompt "Is it linear or not? 1-yes, 2-no"))
+   :tech (Integer. (prompt "Is it full of high-tech mechanisms or more old school based on riddles? (ask your game-master) 1-mechanisms, 2-riddles"))
+   :knowledge (Integer. (prompt "Does it require knowledge about the topic? 1-yes, 2-no"))
+   }
+  )
 
+(def ^:dynamic *players* [])
+(def ^:dynamic *room* {})
+
+(defn room-data-maker []
+   (alter-var-root #'*room*
+                  (fn [_]
+                    (get-room-info)))
+  (println "OK! Thank you.")
+  (println "Room information stored in memory:")
+  (prn *room*))
 
 (defn players-vector-maker []
    (let [num-users (Integer. (prompt "How many users?"))
@@ -95,7 +107,8 @@
     (prn *players*)))
 
 (defn -main [& args]
- (players-vector-maker))
+ (players-vector-maker)
+  (room-data-maker))
     
   
   
