@@ -52,26 +52,22 @@
      :knowledge (Integer. (prompt "Does it require knowledge about the topic? 1-yes, 2-no"))
      :division division}))
 
-(def ^:dynamic *players* [])
-(def ^:dynamic *room* {})
+(def players (atom []))
+(def room (atom {}))
 
 (defn room-data-maker [num-players]
-   (alter-var-root #'*room*
-                  (fn [_]
-                    (get-room-info num-players)))
+  (swap! room (fn [_] (get-room-info num-players)))
   (println "OK! Thank you.")
   (println "Room information stored in memory:")
-  (prn *room*))
+  (prn @room))
 
 (defn players-vector-maker []
-   (let [num-users (Integer. (prompt "How many users?"))
+  (let [num-users (Integer. (prompt "How many users?"))
         user-info (doall (repeatedly num-users get-user-info))]
-    (alter-var-root #'*players*
-                    (fn [current-players]
-                      (concat current-players user-info)))
+    (swap! players #(vec (concat % user-info)))
     (println "OK! Thank you.")
     (println "User information stored in memory:")
-    (prn *players*)))
+    (prn @players)))
 
 
 
@@ -86,11 +82,8 @@
 ;(prompt-for-division (calculate-divisions 12))
 
 (defn -main [& args]
-  
   (players-vector-maker)
-  (room-data-maker 8)
-
-  )
+  (room-data-maker (count @players)))
     
   
   
