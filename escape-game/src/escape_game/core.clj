@@ -1,64 +1,14 @@
 
 (ns escape-game.core
  
-  (:gen-class))
+  (:require [clojure.string :as string]))
 
 
-(defn get-input
-  "Waits for user to enter text and hit enter, then cleans the input"
-  ([] (get-input ""))
-  ([default]
-   (let [input (clojure.string/trim (read-line))]
-     (if (empty? input)
-       default
-       (clojure.string/lower-case input)))))
-;da probam clojure script
-;(defn take-game
- ; []
-  
-  ;(Integer. (get-input 20)
-  ;  ))
 
 
-(defn collect-data-to-determine
-  []
-  (let [score 0]
- (println "Zdravo! Da bismo odredili najbolju podelu, potrebno je da unesete neke podatke vezane za vasu ekipu i sobu.
-               Da li je soba horor karaktera?
-               1-da
-               2-ne")
- (if (= "1" (get-input))
-   (println (inc score))
-   (println (inc score) (inc score)))
- (println "U redu. Da li je soba linearna?
-               1-da
-               2-ne")
-(if (= "1" (get-input))
-  (println (inc score))
-  (println (inc score) (inc score)))
- (println "Da li je fokus sobe na zagonetkama (1) ili mehanizmima (2)?")
-(if (= "1" (get-input))
-  (println (inc score))
-  (println (inc score) (inc score))) (println score)))
- 
-
-(defn podaci []
-  (println "koliko vas igra?")
-  (get-input)
-  (println "nas predlog je da se podelite u _ ekipa. Zelite li drugacije? 
-                1-da
-                2-ne")
-  (get-input)
-  (println "Sada nekoliko podataka o sobi i predlozicemo vam tim.")
-  (collect-data-to-determine)
-  (println "Ovo je ono sto imamo od podataka o igracima: djisgjodg
-                da li postoji nesto vazno sto treba naznaciti u vezi nekog
-                od igraca, a da nije pomenuto?
-                1-ne
-                2-unos")
-  (if (= "2" (get-input))
-    (do (println "unesite:") (get-input))
-    (println "Za nekoliko sekundi videcete nas predlog timova!")))
+;u ovom namespace-u dolazimo do podataka o sobi i o igracima na osnovu kojih
+;ce algoritam vrsiti procenu kako bi bilo najoptimalnije podeliti igrace u odredjeni broj ekipa
+;escape room 
 
 (defn prompt [question]
   (println question)
@@ -77,21 +27,38 @@
    }
   )
 
-(defn get-room-info []
-  {:horror (Integer. (prompt "Now about the room. Is the one you are playing classified as horror? 1-yes, 2-no"))
-   :linear (Integer. (prompt "Is it linear or not? 1-yes, 2-no"))
-   :tech (Integer. (prompt "Is it full of high-tech mechanisms or more old school based on riddles? (ask your game-master) 1-mechanisms, 2-riddles"))
-   :knowledge (Integer. (prompt "Does it require knowledge about the topic? 1-yes, 2-no"))
-   }
-  )
+(defn calculate-divisions [num-players]
+  (let [cases [[2 10 2] [6 15 3] [8 20 4] [10 25 5] [12 30 6] [14 35 7]]
+        matching-cases (filter #(when (<= (first %) num-players (second %)) %) cases)
+        divisions (map #(nth % 2) matching-cases)]
+    (if (seq divisions)
+      divisions
+      (throw (RuntimeException. "No matching division found")))))
+
+
+(defn prompt-for-division [divisions]
+  (let [chosen-division (prompt (str "You can divide into " (string/join ", " divisions) ". Which option would you like? Type one of these numbers."))]
+    (try
+      (Integer. chosen-division)
+      (catch NumberFormatException _
+        (throw (RuntimeException. "Invalid division option"))))))
+
+
+(defn get-room-info [num-players]
+  (let [division (prompt-for-division (calculate-divisions num-players))]
+    {:horror (Integer. (prompt "Now about the room. Is the one you are playing classified as horror? 1-yes, 2-no"))
+     :linear (Integer. (prompt "Is it linear or not? 1-yes, 2-no"))
+     :tech (Integer. (prompt "Is it full of high-tech mechanisms or more old school based on riddles? (ask your game-master) 1-mechanisms, 2-riddles"))
+     :knowledge (Integer. (prompt "Does it require knowledge about the topic? 1-yes, 2-no"))
+     :division division}))
 
 (def ^:dynamic *players* [])
 (def ^:dynamic *room* {})
 
-(defn room-data-maker []
+(defn room-data-maker [num-players]
    (alter-var-root #'*room*
                   (fn [_]
-                    (get-room-info)))
+                    (get-room-info num-players)))
   (println "OK! Thank you.")
   (println "Room information stored in memory:")
   (prn *room*))
@@ -106,9 +73,24 @@
     (println "User information stored in memory:")
     (prn *players*)))
 
+
+
+
+
+(def room-for-test {:linear 1 :horror 2 :tech 1 :knowledge 2 :division 0}) 
+
+(calculate-divisions 12)
+
+
+
+;(prompt-for-division (calculate-divisions 12))
+
 (defn -main [& args]
- (players-vector-maker)
-  (room-data-maker))
+  
+  (players-vector-maker)
+  (room-data-maker 8)
+
+  )
     
   
   
