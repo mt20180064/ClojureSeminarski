@@ -1,7 +1,8 @@
 
 (ns escape-game.core
  
-  (:require [clojure.string :as string]))
+  (:require [clojure.string :as string])
+  (:require [escape_game.logic]))
 
 
 
@@ -24,6 +25,7 @@
    :frightened (Integer. (prompt "Are you scared of the jumpscares and creepy details? 1-yes, 2-no"))
    :theme (Integer. (prompt "Does the theme of the room interest you or is related to you anyhow that can be an advangate? 1-yes, 2-no"))
    :competitiveness (Integer. (prompt "Do you find yourself competitive? 1-yes, 2-no")) 
+   :summary 0
    }
   )
 
@@ -52,7 +54,7 @@
      :knowledge (Integer. (prompt "Does it require knowledge about the topic? 1-yes, 2-no"))
      :division division}))
 
-(def players (atom []))
+(println "(println "(println "")")")(def players (atom []))
 (def room (atom {}))
 
 (defn room-data-maker [num-players]
@@ -69,21 +71,31 @@
     (println "User information stored in memory:")
     (prn @players)))
 
+(def room-for-test 
+  {:tech 1, :division 2})
 
+(defn add-sum-to-player [vector-of-players key-sum zero-value]
+  (map #(assoc % key-sum zero-value) vector-of-players))
 
+(defn add-sum-to-atom [players]
+  (swap! players #(add-sum-to-player % :key-sum 0)))
 
-
-(def room-for-test {:linear 1 :horror 2 :tech 1 :knowledge 2 :division 0}) 
-
-(calculate-divisions 12)
-
-
-
-;(prompt-for-division (calculate-divisions 12))
+(defn algorythms-by-divisions [number-of-divisions]
+  (cond
+    (= number-of-divisions 2 ) (logic/pravljenjeEkipa (count @players) @players)
+    (= number-of-divisions 3) (println "alg za 3") 
+    (= number-of-divisions 4) (println "alg za 4")
+    (= number-of-divisions 5) (println "alg za 5")
+    (= number-of-divisions 6) (println "alg za 6")
+    (= number-of-divisions 7) (println "alg za 7")
+    ))
 
 (defn -main [& args]
+  (println "da li radi ")
   (players-vector-maker)
-  (room-data-maker (count @players)))
+  (room-data-maker (count @players))
+ ; (algorythms-by-divisions (get @room :division))
+  )
     
   
   
