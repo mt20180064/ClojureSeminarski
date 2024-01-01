@@ -17,17 +17,23 @@
   (read-line))
 
 (defn get-user-info []
-  {:name (prompt "Tell me about yourself. Name?")
-   :experience (Integer. (prompt "How experienced from 1 (not at all) to 5 (expert) are you with escape rooms?"))
-   :adroit (Integer. (prompt "How adroit from 1 (not at all) to 5 (extremely) you find yourself?"))
-   :mood (Integer. (prompt "How would you describe your mood today from 1 (bad) to 5 (cheerfull and excited) you find yourself?"))
-   :teamplayer ( Integer. (prompt "Do you find yourself a team player? 1-yes, 2-no"))
-   :frightened (Integer. (prompt "Are you scared of the jumpscares and creepy details? 1-yes, 2-no"))
-   :theme (Integer. (prompt "Does the theme of the room interest you or is related to you anyhow that can be an advangate? 1-yes, 2-no"))
-   :competitiveness (Integer. (prompt "Do you find yourself competitive? 1-yes, 2-no")) 
-   :summary 0
-   }
-  )
+  (let [name (prompt "Tell me about yourself. Name?")
+        experience (Integer. (prompt "How experienced from 1 (not at all) to 5 (expert) are you with escape rooms?"))
+        adroit (Integer. (prompt "How adroit from 1 (not at all) to 5 (extremely) you find yourself?"))
+        mood (Integer. (prompt "How would you describe your mood today from 1 (bad) to 5 (cheerful and excited) you find yourself?"))
+        teamplayer (Integer. (prompt "Do you find yourself a team player? 1-yes, 2-no"))
+        frightened (Integer. (prompt "Are you scared of the jumpscares and creepy details? 1-yes, 2-no"))
+        theme (Integer. (prompt "Does the theme of the room interest you or is related to you anyhow that can be an advantage? 1-yes, 2-no"))
+        competitiveness (Integer. (prompt "Do you find yourself competitive? 1-yes, 2-no"))]
+    {:name name
+     :experience experience
+     :adroit adroit
+     :mood mood
+     :teamplayer teamplayer
+     :frightened frightened
+     :theme theme
+     :competitiveness competitiveness
+     :summary 0}))
 
 (defn calculate-divisions [num-players]
   (let [cases [[2 10 2] [6 15 3] [8 20 4] [10 25 5] [12 30 6] [14 35 7]]
@@ -54,36 +60,29 @@
      :knowledge (Integer. (prompt "Does it require knowledge about the topic? 1-yes, 2-no"))
      :division division}))
 
-(println "(println "(println "")")")(def players (atom []))
-(def room (atom {}))
+
 
 (defn room-data-maker [num-players]
-  (swap! room (fn [_] (get-room-info num-players)))
-  (println "OK! Thank you.")
-  (println "Room information stored in memory:")
-  (prn @room))
+  (let [room-data (get-room-info num-players)]
+    (println "OK! Thank you.")
+    (println "Room information stored in memory:")
+    (prn room-data)
+    room-data))
 
 (defn players-vector-maker []
   (flush)
   (let [num-users (Integer. (prompt "How many users?"))
         user-info (doall (repeatedly num-users get-user-info))]
-    (swap! players #(vec (concat % user-info)))
     (println "OK! Thank you.")
     (println "User information stored in memory:")
-    (prn @players)))
+    (prn user-info)
+    user-info))
 
-(def room-for-test 
-  {:tech 1, :division 2})
 
-(defn add-sum-to-player [vector-of-players key-sum zero-value]
-  (map #(assoc % key-sum zero-value) vector-of-players))
-
-(defn add-sum-to-atom [players]
-  (swap! players #(add-sum-to-player % :key-sum 0)))
 
 (defn algorythms-by-divisions [number-of-divisions]
   (cond
-    (= number-of-divisions 2 ) (logic/pravljenjeEkipa (count @players) @players)
+    (= number-of-divisions 2 ) (logic/pravljenjeEkipa logic/duzina logic/igraci)
     (= number-of-divisions 3) (println "alg za 3") 
     (= number-of-divisions 4) (println "alg za 4")
     (= number-of-divisions 5) (println "alg za 5")
@@ -91,12 +90,17 @@
     (= number-of-divisions 7) (println "alg za 7")
     ))
 
-(defn -main [& args]
-  (println "da li radi ")
-  (players-vector-maker)
-  (room-data-maker (count @players))
- ; (algorythms-by-divisions (get @room :division))
-  )
+
+
+(defn -main
+  "Entry point for the program"
+  [& args]
+  
+  (algorythms-by-divisions (get (room-data-maker (count (players-vector-maker))) :division)))
+  
+(-main)
+
+
     
   
   
