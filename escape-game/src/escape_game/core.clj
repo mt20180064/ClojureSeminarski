@@ -64,6 +64,7 @@
   (prn @room))
 
 (defn players-vector-maker []
+  (flush)
   (let [num-users (Integer. (prompt "How many users?"))
         user-info (doall (repeatedly num-users get-user-info))]
     (swap! players #(vec (concat % user-info)))

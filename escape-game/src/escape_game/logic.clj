@@ -106,7 +106,7 @@ duzina
                (my-into [(get (nth sortirana i) :name)] t1)
                (my-into [(get (nth sortirana j) :name)] t2))))))
 
-(pravljenjeEkipa duzina igraci)
+;(pravljenjeEkipa duzina igraci)
 
 
 
