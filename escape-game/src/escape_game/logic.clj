@@ -158,10 +158,20 @@ duzina
 
 (def divided-teams (divide-players players-with-coef))
 
-(println "Divided Teams:" divided-teams)
 
-(println (get (first (last divided-teams)) :name))
+(defn print-teams [divided-teams]
+  (let [format-team (fn [team]
+                      (clojure.string/join ", " (map :name team)))]
+    (loop [idx 0
+           teams divided-teams
+           result ""]
+      (if (empty? teams)
+        result
+        (let [team-str (format-team (first teams))
+              new-result (str result "Team " (inc idx) ": " team-str "\n")]
+          (recur (inc idx) (rest teams) new-result))))))
 
+(print-teams divided-teams)
 
 
 
