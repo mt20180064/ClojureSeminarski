@@ -1,10 +1,12 @@
 (ns logic
-  (:require [clojure.string])
-  (:require [incanter.core :as i]
+  (:require [clojure.string]
+            [incanter.core]
             [incanter.stats :as stats]))
 (defn my-into
   [target additions]
   (apply conj additions target))
+
+
 
 (def igraci [{:name "Nina" :experience 4 :teamplayer 1 :adroit 5 :mood 5 :theme 2 :frightened 2 :competitiveness 2 }
              {:name "Anis" :experience  4 :teamplayer 1 :adroit 4 :mood 2 :theme 1 :frightened  1 :competitiveness 1 }
@@ -21,11 +23,7 @@
              {:name "Bebinger" :experience  1 :teamplayer 1 :adroit 4 :mood 5 :theme  2 :frightened  2 :competitiveness 1 }
              ])
 
-(defn group-competitive-players [players]
-  (let [grouped-players (group-by #(= (:competitiveness %) 1) players)]
-    (concat (grouped-players true) (grouped-players false))))
 
-(group-competitive-players igraci)
 
  
 (def duzina (count igraci))
@@ -233,10 +231,73 @@ duzina
 
 (defn scale-players [players]
   (map scale-player players))
+;nesto ocigledno nije u redu sa okruzenjem i ne mogu vise da gubim vreme
+;na ucitavanje biblioteke tako da cu implementirati neku pocetnicku verziju k-meansa bez biblioteke
+;prvo osnovne funkcije koje ce biti potrebne
+(defn euclidean-distance [vec1 vec2]
+  (Math/sqrt (reduce + (map #(Math/pow (- %1 %2) 2) vec1 vec2))))
 
-(defn create-dataset [scaled-players]
-  (let [keys (keys (first scaled-players))]
-    (i/to-matrix (map (fn [player] (map player keys)) scaled-players))))
+(defn average [coll]
+  (/ (reduce + coll) (count coll)))
+
+(defn mean [vectors]
+  (map average (apply map vector vectors)))
+;uzimamo vrednosti atributa koje cemo koristiti za grupisanje
+(defn extract-features [player]
+  [(scale-value(player :experience) )(scale-value(player :adroit) )(scale-value(player :mood)) (scale-value(player :theme))])
+;funkcija map prolazi kroz igrace i onda svakog od njih dodeljuje centroidu kom je najblizi 
+;(if to obavlja unutar funkcije reduce koja vektor sa mapama igraca
+;transformise tako sto deli igrace u klastere)
+(defn assign-players-to-nearest-centroid [players centroids]
+  (map (fn [player]
+         (let [player-features (extract-features player)]
+           (try
+             (let [assignment (reduce (fn [a b]
+                                        (let [centroid-a (centroids a)
+                                              centroid-b (centroids b)]
+                                          (if (< (euclidean-distance player-features centroid-a)
+                                                 (euclidean-distance player-features centroid-b))
+                                            a b)))
+                                      (keys centroids))]
+               (println "Assignment for player:" assignment) 
+               assignment)
+             (catch Exception e
+               (println "Exception for player:" player "Error:" e)
+               nil)))) 
+       players))
+
+
+
+
+(def initial-centroids {0 [0.2 0.4 0.6 0.8]   
+                        1 [0.8 0.6 0.4 0.2]
+                        2 [0.4 0.6 0.8 0.2]
+                        3 [0.6 0.4 0.2 0.8]})
+ 
+
+(assign-players-to-nearest-centroid igraci initial-centroids)
+
+(def assignments (assign-players-to-nearest-centroid igraci initial-centroids))
+assignments
+
+(defn update-centroids [players assignments k]
+  (let [grouped-players (group-by #(get assignments %) players)]
+    (into {} (map (fn [i]
+                    [i (mean (map extract-features (get grouped-players i)))])
+                  (range k)))))
+
+(defn k-means-players [players k]
+  (let [initial-centroids (into {} (map-indexed (fn [i _] [i (extract-features (nth players i))]) (range k)))
+        max-iterations 100]
+    (loop [centroids initial-centroids
+           n 0]
+      (let [assignments (assign-players-to-nearest-centroid players centroids)
+            new-centroids (update-centroids players assignments k)]
+        (if (or (= centroids new-centroids) (>= n max-iterations))
+          centroids
+          (recur new-centroids (inc n)))))))
+
+(k-means-players (scale-players igraci) 4)
 
 
 

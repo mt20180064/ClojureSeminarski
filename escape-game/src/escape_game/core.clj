@@ -100,7 +100,7 @@
         room-data (room-data-maker (count players))]
     (algorythms-by-divisions (get room-data :division) players room-data)))
   
-(-main)
+
 
 
     
