@@ -1,5 +1,5 @@
-(ns logic)
-
+(ns logic
+  (:require [clojure.string]))
 (defn my-into
   [target additions]
   (apply conj additions target))
@@ -16,7 +16,7 @@
              {:name "Nelsi" :experience  3 :teamplayer 2 :adroit 3 :mood 4 :theme  1 :frightened  1 :competitiveness 2  }
              {:name "Beli" :experience  5 :teamplayer 2 :adroit 1 :mood 2 ::theme  1 :frightened  2 :competitiveness 1  }
              {:name "Cole" :experience  4 :teamplayer 1 :adroit 5 :mood 1 :theme  1 :frightened 1 :competitiveness 1  }
-             ;{:name "Bebinger" :experience  1 :teamplayer 1 :adroit 4 :mood 5 :theme  2 :frightened  2 :competitiveness 1 }
+             {:name "Bebinger" :experience  1 :teamplayer 1 :adroit 4 :mood 5 :theme  2 :frightened  2 :competitiveness 1 }
              ])
 
 (defn group-competitive-players [players]
@@ -106,7 +106,64 @@ duzina
                (my-into [(get (nth sortirana i) :name)] t1)
                (my-into [(get (nth sortirana j) :name)] t2))))))
 
-(pravljenjeEkipa duzina igraci)
+;sada cu da pokusam da napravim algoritam za podelu u tri ekipe. 
+;ideja mi je da u odnosu na ovaj za podelu na dva unapredim algoritam tako sto ce se 
+;uzimati u obzir i kakva je soba. To cu da postignem tako sto 
+;cu uvesti pojam koeficijenta igraca na koji ce razlicite vrednosti vezane za sobu razlicito
+;ucitaci na vrednost atributa igraca tj doprinos svakog od njih konacnom koeficijentu
+(def room-for-testing 
+  {:horror 1, :linear 1, :tech 2, :knowledge 1})
+(def player-for-test
+  {:name "Nina" :experience 4 :teamplayer 1 :adroit 5 :mood 5 :theme 2 :frightened 2 :competitiveness 2})
+(defn calculate-coef [player room-data]
+  (let [base-coef (+ (:experience player) (:adroit player) (:mood player))
+        horror-adjust (cond
+                        (and (= 1 (:horror room-data)) (= 1 (:frightened player))) -4
+                        (and (= 1 (:horror room-data)) (= 2 (:frightened player))) -1
+                        :else 0)
+        knowledge-adjust (if (and (= 1 (:knowledge room-data)) (= 1 (:theme player))) 3 0)
+        tech-adjust (if (and (= 1 (:tech room-data)) (> (:experience player) 3) (= 1 (:theme player))) 1 0)
+        linear-adjust (if (and (= 2 (:linear room-data)) (= 1 (:teamplayer player))) 1 0)]
+    (+ base-coef horror-adjust knowledge-adjust tech-adjust linear-adjust)))
+
+
+
+
+(defn add-coefs-to-players [players room-data]
+  (map (fn [player]
+         (assoc player :coef (calculate-coef player room-data)))
+       players))
+
+
+(defn divide-players [players]
+  (let [ensure-coef (fn [player] (if (nil? (:coef player)) (assoc player :coef 0) player))
+        sorted-players (sort-by :coef > (map ensure-coef players))
+        team-1 []
+        team-2 []
+        team-3 []
+        teams (reduce (fn [[team1 team2 team3] player]
+                        (let [team-sizes (map count [team1 team2 team3])
+                              min-size (apply min team-sizes)
+                              min-index (first (keep-indexed #(when (= %2 min-size) %1) team-sizes))]
+                          (cond
+                            (= min-index 0) [(conj team1 player) team2 team3]
+                            (= min-index 1) [team1 (conj team2 player) team3]
+                            :else [team1 team2 (conj team3 player)])))
+                      [team-1 team-2 team-3]
+                      sorted-players)]
+    teams))
+
+
+(def players-with-coef (add-coefs-to-players igraci room-for-testing))
+
+(def divided-teams (divide-players players-with-coef))
+
+(println "Divided Teams:" divided-teams)
+
+(println (get (first (last divided-teams)) :name))
+
+
+
 
 
 
