@@ -6,6 +6,7 @@
   :dependencies [[org.clojure/clojure "1.11.1"]
                  [org.clojure/java.jdbc "0.7.10"]
                  [com.h2database/h2 "1.4.200"]
+                 [incanter "1.9.3"]
                  ]
   :main ^:skip-aot escape-game.core
   :target-path "target/%s"

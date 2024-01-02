@@ -1,5 +1,7 @@
 (ns logic
-  (:require [clojure.string]))
+  (:require [clojure.string])
+  (:require [incanter.core :as i]
+            [incanter.stats :as stats]))
 (defn my-into
   [target additions]
   (apply conj additions target))
@@ -218,6 +220,23 @@ duzina
     (print-teams balanced-teams)))
 
 
+;za algoritam za podelu na 4 pokusacu da koristim k-means algoritam koristeci biblioteku Incanter.
+;iako su vrednosti atributa za igrace dobro rasporedjene (1-5) prvo cu ih normalizovati kako bi rezultati bili optimalniji
+
+
+
+(defn scale-value [x]
+  (/ (- x 1) 4))
+
+(defn scale-player [player]
+  (into {} (map (fn [[k v]] [k (if (number? v) (scale-value v) v)]) player)))
+
+(defn scale-players [players]
+  (map scale-player players))
+
+(defn create-dataset [scaled-players]
+  (let [keys (keys (first scaled-players))]
+    (i/to-matrix (map (fn [player] (map player keys)) scaled-players))))
 
 
 
