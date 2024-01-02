@@ -152,14 +152,58 @@ duzina
                       [team-1 team-2 team-3]
                       sorted-players)]
     teams))
-
-
 (def players-with-coef (add-coefs-to-players igraci room-for-testing))
-
 (def divided-teams (divide-players players-with-coef))
 
+;ovo do sada je izostavilo uticaj toga da ti je igrac timski igrac ili kompetitivan
+;jer ti faktori imaju znacaja tek nakon sto je inicijalna podela vec napravljena, zato sto sami od sebe
+;nisu vazni koliko i kada se porede sa ostalima. Dakle, sada dodajem te faktore u algoritam tako sto
+;timski igraci bolje igraju kada su zajedno, dok kompetitivni igraci nisu losiji ako su sami, ali losiji su
+;ako su dva u istom timu. To cu implementirati preko uticaja na koeficijent
+(defn adjust-coefs-for-traits [team]
+  (let [teamplayer-count (count (filter #(= 1 (:teamplayer %)) team))
+        competitive-count (count (filter #(= 1 (:competitiveness %)) team))]
+    (map (fn [player]
+           (let [teamplayer-adjust (if (> teamplayer-count 1) 1 0)
+                 competitive-adjust (if (> competitive-count 1) -1 0)]
+             (update player :coef + teamplayer-adjust competitive-adjust)))
+         team)))
+(adjust-coefs-for-traits (first divided-teams))
 
-(defn print-teams [divided-teams]
+
+(defn calculate-threshold [room-data teams]
+  (let [base-threshold 8
+        team-size-factor (if (> (count (first teams)) 5) 1 0.8) ;; smaller threshold for smaller teams
+        linear-factor (if (= 1 (:linear room-data)) 1.2 1) ;; higher threshold for linear rooms
+        horror-factor (if (= 1 (:horror room-data)) 0.8 1)] ;; smaller threshold for horror rooms
+    (int (* base-threshold team-size-factor linear-factor horror-factor))))
+
+
+(calculate-threshold room-for-testing divided-teams)
+
+(def counted-threshold (calculate-threshold room-for-testing divided-teams))
+
+
+
+(defn is-balanced [teams threshold]
+  (let [team-coefs (map #(reduce + (map :coef %)) teams)
+        max-coef (apply max team-coefs)
+        min-coef (apply min team-coefs)]
+    (<= (- max-coef min-coef) threshold)))
+
+(is-balanced divided-teams counted-threshold)
+
+(defn redivide-if-unbalanced [teams original-players threshold]
+  (if (is-balanced teams threshold)
+    teams
+    (let [updated-players (apply concat (map adjust-coefs-for-traits teams))]
+      (divide-players updated-players))))
+
+(redivide-if-unbalanced divided-teams players-with-coef counted-threshold)
+
+(def adjusted-teams (map adjust-coefs-for-traits divided-teams))
+(def balanced-teams (redivide-if-unbalanced adjusted-teams players-with-coef counted-threshold))
+(defn print-teams [balanced-teams]
   (let [format-team (fn [team]
                       (clojure.string/join ", " (map :name team)))]
     (loop [idx 0
@@ -171,7 +215,7 @@ duzina
               new-result (str result "Team " (inc idx) ": " team-str "\n")]
           (recur (inc idx) (rest teams) new-result))))))
 
-(print-teams divided-teams)
+(print-teams balanced-teams)
 
 
 
