@@ -111,10 +111,7 @@ duzina
 ;uzimati u obzir i kakva je soba. To cu da postignem tako sto 
 ;cu uvesti pojam koeficijenta igraca na koji ce razlicite vrednosti vezane za sobu razlicito
 ;ucitaci na vrednost atributa igraca tj doprinos svakog od njih konacnom koeficijentu
-(def room-for-testing 
-  {:horror 1, :linear 1, :tech 2, :knowledge 1})
-(def player-for-test
-  {:name "Nina" :experience 4 :teamplayer 1 :adroit 5 :mood 5 :theme 2 :frightened 2 :competitiveness 2})
+
 (defn calculate-coef [player room-data]
   (let [base-coef (+ (:experience player) (:adroit player) (:mood player))
         horror-adjust (cond
@@ -152,8 +149,7 @@ duzina
                       [team-1 team-2 team-3]
                       sorted-players)]
     teams))
-(def players-with-coef (add-coefs-to-players igraci room-for-testing))
-(def divided-teams (divide-players players-with-coef))
+
 
 ;ovo do sada je izostavilo uticaj toga da ti je igrac timski igrac ili kompetitivan
 ;jer ti faktori imaju znacaja tek nakon sto je inicijalna podela vec napravljena, zato sto sami od sebe
@@ -168,7 +164,7 @@ duzina
                  competitive-adjust (if (> competitive-count 1) -1 0)]
              (update player :coef + teamplayer-adjust competitive-adjust)))
          team)))
-(adjust-coefs-for-traits (first divided-teams))
+
 
 
 (defn calculate-threshold [room-data teams]
@@ -179,9 +175,7 @@ duzina
     (int (* base-threshold team-size-factor linear-factor horror-factor))))
 
 
-(calculate-threshold room-for-testing divided-teams)
 
-(def counted-threshold (calculate-threshold room-for-testing divided-teams))
 
 
 
@@ -191,7 +185,7 @@ duzina
         min-coef (apply min team-coefs)]
     (<= (- max-coef min-coef) threshold)))
 
-(is-balanced divided-teams counted-threshold)
+
 
 (defn redivide-if-unbalanced [teams original-players threshold]
   (if (is-balanced teams threshold)
@@ -199,15 +193,14 @@ duzina
     (let [updated-players (apply concat (map adjust-coefs-for-traits teams))]
       (divide-players updated-players))))
 
-(redivide-if-unbalanced divided-teams players-with-coef counted-threshold)
 
-(def adjusted-teams (map adjust-coefs-for-traits divided-teams))
-(def balanced-teams (redivide-if-unbalanced adjusted-teams players-with-coef counted-threshold))
+
+
 (defn print-teams [balanced-teams]
   (let [format-team (fn [team]
                       (clojure.string/join ", " (map :name team)))]
     (loop [idx 0
-           teams divided-teams
+           teams balanced-teams
            result ""]
       (if (empty? teams)
         result
@@ -215,7 +208,16 @@ duzina
               new-result (str result "Team " (inc idx) ": " team-str "\n")]
           (recur (inc idx) (rest teams) new-result))))))
 
-(print-teams balanced-teams)
+
+;sledecu funkciju pravim da bih lakse pozvala ceo ovaj algoritam iz drugog namespace-a
+ (defn create-and-print-balanced-teams [players room-data]
+  (let [players-with-coef (add-coefs-to-players players room-data)
+        divided-teams (divide-players players-with-coef)
+        threshold (calculate-threshold room-data divided-teams)
+        balanced-teams (redivide-if-unbalanced divided-teams players-with-coef threshold)]
+    (print-teams balanced-teams)))
+
+
 
 
 

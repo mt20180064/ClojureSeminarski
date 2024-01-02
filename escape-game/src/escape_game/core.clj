@@ -79,11 +79,12 @@
     user-info))
 
 
+  
 
-(defn algorythms-by-divisions [number-of-divisions]
+(defn algorythms-by-divisions [number-of-divisions players room]
   (cond
-    (= number-of-divisions 2 ) (logic/pravljenjeEkipa logic/duzina logic/igraci)
-    (= number-of-divisions 3) (println "alg za 3") 
+    (= number-of-divisions 2 ) (logic/pravljenjeEkipa (count players) players)
+    (= number-of-divisions 3) (logic/create-and-print-balanced-teams players room) 
     (= number-of-divisions 4) (println "alg za 4")
     (= number-of-divisions 5) (println "alg za 5")
     (= number-of-divisions 6) (println "alg za 6")
@@ -95,8 +96,9 @@
 (defn -main
   "Entry point for the program"
   [& args]
-  
-  (algorythms-by-divisions (get (room-data-maker (count (players-vector-maker))) :division)))
+  (let [players (players-vector-maker)
+        room-data (room-data-maker (count players))]
+    (algorythms-by-divisions (get room-data :division) players room-data)))
   
 (-main)
 
