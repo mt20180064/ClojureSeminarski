@@ -349,8 +349,6 @@
 ;razlika u odnosu na vec prethodno implementirani algoritam je sto je taj radio sa ukupnim koeficijenotm,
 ;a sada varira svaka od vrednosti pojedinacno
 
-(def room-for-test
-{:horror 1, :linear 1, :tech 2, :knowledge 1, :division 4})
 (defn adjust-weights-based-on-room [room-data] 
   (let [base-weights {:experience 0.4, :adroit 0.35, :mood 0.3, :teamplayer 0.25, :competitiveness 0.2, :theme 0.15, :frightened 0.1}]
     (-> base-weights
@@ -363,6 +361,29 @@
 ;za igraca racunamo skor na osnovu njihovih atributa i odgovarajucih tezinskih koeficijenata
 (defn calculate-player-score [player weights]
   (reduce + (map (fn [[attr weight]] (* (get player attr 0) weight)) weights)))
+
+;podela igraca u timove na osnovu skora tako da svaki tim bude priblizno jednake snage
+
+;mod je tu da bi osiguralo da ce se zavrsiti 
+(defn divide-players-into-teams-by-score [players num-teams adjusted-weights]
+  (let [player-scores (map #(calculate-player-score % adjusted-weights) players)
+        sorted-players (map first (sort-by second > (zipmap players player-scores)))
+        teams (reduce (fn [teams player]
+                        (let [team-index (mod (count (first teams)) num-teams)
+                              updated-teams (update teams team-index conj player)]
+                          (conj (vec (rest updated-teams)) (first updated-teams))))
+                      (vec (repeat num-teams []))
+                      sorted-players)]
+    (vec (sort-by count > teams))))
+
+
+(defn format-team-assignments-for-5 [team-assignments]
+  (let [team-names (map #(str "Team" % ":") (range 1 (inc (count team-assignments))))]
+    (zipmap team-names
+            (map (fn [team]
+                   (str (clojure.string/join ", " (map #(get % :name) team))))
+                 team-assignments))))
+
 
 
 
