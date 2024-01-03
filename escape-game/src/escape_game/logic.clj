@@ -383,6 +383,12 @@
             (map (fn [team]
                    (str (clojure.string/join ", " (map #(get % :name) team))))
                  team-assignments))))
+(defn divide-and-format-players [players room-data num-teams]
+  (let [adjusted-weights (adjust-weights-based-on-room room-data)
+        team-assignments (divide-players-into-teams-by-score players num-teams adjusted-weights)
+        formatted-teams (format-team-assignments team-assignments)]
+    formatted-teams))
+
 
 
 
