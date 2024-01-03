@@ -418,6 +418,18 @@
                                     players)]
     (map first (sort-by second players-with-deviation))))
 
+(defn round-robin-distribute [players num-teams]
+  (let [player-std-devs (map (fn [player] [player (standard-deviation (player-attributes-list player))]) players)
+        sorted-players (map first (sort-by second player-std-devs))
+        initial-teams (vec (repeat num-teams []))]
+    (reduce (fn [teams player]
+              (let [team-index (mod (count (first teams)) num-teams)
+                    updated-teams (update teams team-index conj player)]
+                (conj (vec (rest updated-teams)) (first updated-teams))))
+            initial-teams
+            sorted-players)))
+;prethodna funkcija za formatiranje se moze primeniti i ovde tako da nema potrebe da je opet implementiram
+
 
 
 
