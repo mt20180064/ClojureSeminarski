@@ -389,6 +389,40 @@
         formatted-teams (format-team-assignments team-assignments)]
     formatted-teams))
 
+;algoritam koji cu sada implementirati je prilagodjeni Round Robin algoritam s tim sto cu na 
+;specifican nacin soritrati igrace. Umesto da se rangiranje vrsi na osnovu zbira vrednosti njihovih atributa
+;ili na osnovu nekih konkretnih atributa, vrste sobe, itd., ovaj put ce se za boljeg 
+;igraca smatrati onaj cije su vrednosti atributa medjusobno najslicnije. 
+;Da bih to ostvarila za pocetak mi treba funkcija za izracunavanje standardne devijacije:
+(defn standard-deviation [numbers]
+  (let [mean (double (/ (reduce + numbers) (count numbers)))
+        sum-squared-diffs (reduce (fn [acc n] (+ acc (Math/pow (- n mean) 2))) 0 numbers)]
+    (Math/sqrt (/ sum-squared-diffs (count numbers)))))
+
+;posto ona ukljucuje deljenje, bolje da pretvorim celobrojne vrednosti atributa (sve) u decimalne
+
+(defn player-attributes-list [player]
+  [(double (:experience player))
+   (double (:teamplayer player))
+   (double (:adroit player))
+   (double (:mood player))
+   (double (:theme player))
+   (double (:frightened player))
+   (double (:competitiveness player))])
+;sada pretvaram vrednosti u decimalne ovom funkcijom za svakog igraca, racunam standardnu devijaciju izmedju njih
+;i sortiram igrace po najmanjoj vrednosti iste
+
+(defn rank-players [players]
+  (let [players-with-deviation (map (fn [player]
+                                      [player (standard-deviation (player-attributes-list player))])
+                                    players)]
+    (map first (sort-by second players-with-deviation))))
+
+
+
+
+
+
 
 
 
