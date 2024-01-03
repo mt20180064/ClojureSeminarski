@@ -94,7 +94,7 @@
 
 (def room-for-test
   {:horror 1 :linear 1 :knowledge 2 :tech 2})
-(defn pravljenjeEkipa
+(defn two-teams
   [n lista]
   (let [sortirana (give-teams n (sort-everything lista n))] 
     (loop  [i 0 j 1 t1 #{(if (clojure.core/odd? n)
@@ -427,6 +427,22 @@
 
          
 
+;ubacicu i algoritam za nasumicnu raspodelu kako bih kasnije poredila rezultate
+;jedino o cemu algoritam vodi racuna je da bude jednak ili priblizno jednak broj igraca u svim timovima (obezbedjeno mod funkcijom)
+(defn distribute-players-randomly [players num-teams]
+  (let [shuffled-players (shuffle players)
+        initial-teams (vec (repeat num-teams []))]
+    (reduce (fn [teams player]
+              (let [team-index (mod (count (first teams)) num-teams)
+                    updated-teams (update teams team-index conj player)]
+                (conj (vec (rest updated-teams)) (first updated-teams))))
+            initial-teams
+            shuffled-players)))
+
+
+
+
+
 
 
 
@@ -445,7 +461,7 @@
 
 
  
-
+ 
 
 
 
