@@ -8,7 +8,7 @@
 
 
 
-(def igraci [{:name "Nina" :experience 4 :teamplayer 1 :adroit 5 :mood 5 :theme 2 :frightened 2 :competitiveness 2 }
+(def igraci [{:name "Nina" :experience 1 :teamplayer 1 :adroit 3 :mood 5 :theme 2 :frightened 2 :competitiveness 2 }
              {:name "Anis" :experience  4 :teamplayer 1 :adroit 4 :mood 2 :theme 1 :frightened  1 :competitiveness 1 }
              {:name "Điri" :experience  5 :teamplayer 2 :adroit 1 :mood 5 :theme  2 :frightened 2 :competitiveness 1 }
              {:name "Joča" :experience  2 :teamplayer 1 :adroit 3 :mood 1 :theme  1 :frightened  1 :competitiveness 2 }
@@ -28,7 +28,17 @@
  
 (def duzina (count igraci))
 ;duzina
-
+(defn print-teams [balanced-teams]
+  (let [format-team (fn [team]
+                      (clojure.string/join ", " (map :name team)))]
+    (loop [idx 0
+           teams balanced-teams
+           result ""]
+      (if (empty? teams)
+        result
+        (let [team-str (format-team (first teams))
+              new-result (str result "Team " (inc idx) ": " team-str "\n")]
+          (recur (inc idx) (rest teams) new-result))))))
 
 
 (defn check-topic
@@ -68,9 +78,9 @@
 
 
 (defn sort-everything
- [igraci duzina]
+ [igraci]
   (loop [i 0 sortiran []]
-    (if (= duzina i)
+    (if (= (count igraci) i)
       sortiran
    (recur (inc i) (sort-by :summary (my-into [(sum-everything (nth igraci i))] sortiran))))))
 
@@ -91,21 +101,27 @@
     ))
 
  
+(defn distribute-players-across-teams [players num-teams]
+  (let [total-players (count players)]
+    (loop [front 0
+           back (dec total-players)
+           teams (vec (repeat num-teams []))]
+      (cond
+        (> front back) teams 
+        (= front back)
+        (let [random-team (rand-int num-teams)]
+          (update teams random-team conj (nth players front)))
+        :else
+        (let [team-index (mod front num-teams)
+              updated-teams (-> teams
+                                (update team-index conj (nth players front))
+                                (update team-index conj (nth players back)))]
+          (recur (inc front) (dec back) updated-teams))))))
 
+(print-teams (distribute-players-across-teams (sort-everything igraci) 4))
 (def room-for-test
-  {:horror 1 :linear 1 :knowledge 2 :tech 2})
-(defn two-teams
-  [n lista]
-  (let [sortirana (give-teams n (sort-everything lista n))] 
-    (loop  [i 0 j 1 t1 #{(if (clojure.core/odd? n)
-                           (get (last sortirana) :name)
-                           "")} t2 #{}]
-      (if (or (= n j) (= n i) (= n (+ (count t2) (count t2))))
-        (println "evo prvog tima" t1 "  evo drugog tima" t2)
-        (recur (+ 1 (inc i))
-               (+ 1 (inc j))
-               (my-into [(get (nth sortirana i) :name)] t1)
-               (my-into [(get (nth sortirana j) :name)] t2))))))
+  {:horror 2 :linear 2 :knowledge 1 :tech 1})
+
 
 
 ;sada cu da pokusam da napravim algoritam za podelu u tri ekipe. 
@@ -194,35 +210,25 @@
   (if (is-balanced teams threshold)
     teams
     (let [updated-players (apply concat (map adjust-coefs-for-traits teams))]
-      (divide-players updated-players))))
+      (divide-players updated-players (count teams)))))
 
 
 
 
-(defn print-teams [balanced-teams]
-  (let [format-team (fn [team]
-                      (clojure.string/join ", " (map :name team)))]
-    (loop [idx 0
-           teams balanced-teams
-           result ""]
-      (if (empty? teams)
-        result
-        (let [team-str (format-team (first teams))
-              new-result (str result "Team " (inc idx) ": " team-str "\n")]
-          (recur (inc idx) (rest teams) new-result))))))
+
 
 
 ;sledecu funkciju pravim da bih lakse pozvala ceo ovaj algoritam iz drugog namespace-a
- (defn create-and-print-balanced-teams [players room-data]
+ (defn create-and-print-balanced-teams [players room-data num-teams]
   (let [players-with-coef (add-coefs-to-players players room-data)
-        divided-teams (divide-players players-with-coef)
+        divided-teams (divide-players players-with-coef num-teams)
         threshold (calculate-threshold room-data divided-teams)
         balanced-teams (redivide-if-unbalanced divided-teams players-with-coef threshold)]
     (print-teams balanced-teams)))
 
 
 
-(create-and-print-balanced-teams igraci room-for-test)
+(create-and-print-balanced-teams igraci room-for-test 5)
 ;za algoritam za podelu na 4 pokusacu da koristim k-means algoritam koristeci biblioteku Incanter.
 ;iako su vrednosti atributa za igrace dobro rasporedjene (1-5) prvo cu ih normalizovati kako bi rezultati bili optimalniji
 
@@ -360,11 +366,11 @@
 (defn adjust-weights-based-on-room [room-data] 
   (let [base-weights {:experience 0.4, :adroit 0.35, :mood 0.3, :teamplayer 0.25, :competitiveness 0.2, :theme 0.15, :frightened 0.1}]
     (-> base-weights
-        (update :adroit #(if (= (:tech room-data) 1) (* % 1.5) %))
-        (update :teamplayer #(if (= (:linear room-data) 2) (* % 2) %))
-        (update :frightened #(if (= (:horror room-data) 1) (* % 3) %))
-        (update :theme #(if (= (:knowledge room-data) 1) (* % 2.2) %))
-        (update :experience #(if (= (:linear room-data) 1) (* % 1.5) %)))))
+        (update :adroit #(if (= (:tech room-data) 1) (* % 1.3) %))
+        (update :teamplayer #(if (= (:linear room-data) 2) (* % 1.5) %))
+        (update :frightened #(if (= (:horror room-data) 1) (* % 1.6) %))
+        (update :theme #(if (= (:knowledge room-data) 1) (* % 1.7) %))
+        (update :experience #(if (= (:linear room-data) 1) (* % 1.4) %)))))
 
 ;za igraca racunamo skor na osnovu njihovih atributa i odgovarajucih tezinskih koeficijenata
 (defn calculate-player-score [player weights]
@@ -386,12 +392,13 @@
 
 
 
+
 (defn divide-and-format-players [players room-data num-teams]
   (let [adjusted-weights (adjust-weights-based-on-room room-data)
         team-assignments (divide-players-into-teams-by-score players num-teams adjusted-weights)
         formatted-teams (print-teams team-assignments)]
     formatted-teams))
-(divide-and-format-players igraci room-for-test 5)
+(divide-and-format-players igraci room-for-test 3)
 ;algoritam koji cu sada implementirati je prilagodjeni Round Robin algoritam s tim sto cu na 
 ;specifican nacin soritrati igrace. Umesto da se rangiranje vrsi na osnovu zbira vrednosti njihovih atributa
 ;ili na osnovu nekih konkretnih atributa, vrste sobe, itd., ovaj put ce se za boljeg 
