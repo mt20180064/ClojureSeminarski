@@ -92,7 +92,8 @@
 
  
 
-
+(def room-for-test
+  {:horror 1 :linear 1 :knowledge 2 :tech 2})
 (defn pravljenjeEkipa
   [n lista]
   (let [sortirana (give-teams n (sort-everything lista n))] 
@@ -105,6 +106,7 @@
                (+ 1 (inc j))
                (my-into [(get (nth sortirana i) :name)] t1)
                (my-into [(get (nth sortirana j) :name)] t2))))))
+
 
 ;sada cu da pokusam da napravim algoritam za podelu u tri ekipe. 
 ;ideja mi je da u odnosu na ovaj za podelu na dva unapredim algoritam tako sto ce se 
@@ -218,6 +220,8 @@
     (print-teams balanced-teams)))
 
 
+
+(create-and-print-balanced-teams igraci room-for-test)
 ;za algoritam za podelu na 4 pokusacu da koristim k-means algoritam koristeci biblioteku Incanter.
 ;iako su vrednosti atributa za igrace dobro rasporedjene (1-5) prvo cu ih normalizovati kako bi rezultati bili optimalniji
 
@@ -227,7 +231,6 @@
   (/ (- x 1) 4))
  
  
-
 (defn scale-player [player]
   (into {} (map (fn [[k v]] [k (if (number? v) (scale-value v) v)]) player)))
 
@@ -344,6 +347,10 @@
         formatted-teams (format-team-assignments team-assignments)]
     formatted-teams))
 
+(k-means-and-divide-teams igraci 4)
+
+
+
 ;sledeci algoritam delice igrace na osnovu vrednosti njihovih atributa, ali ce njima prethodno biti
 ;dodati tezinski koeficijenti koji zavise i od tipa sobe koji se igra, prvo definisemo inicijalne koeficijente
 ;razlika u odnosu na vec prethodno implementirani algoritam je sto je taj radio sa ukupnim koeficijenotm,
@@ -377,18 +384,13 @@
     (vec (sort-by count > teams))))
 
 
-(defn format-team-assignments-for-5 [team-assignments]
-  (let [team-names (map #(str "Team" % ":") (range 1 (inc (count team-assignments))))]
-    (zipmap team-names
-            (map (fn [team]
-                   (str (clojure.string/join ", " (map #(get % :name) team))))
-                 team-assignments))))
+
 (defn divide-and-format-players [players room-data num-teams]
   (let [adjusted-weights (adjust-weights-based-on-room room-data)
         team-assignments (divide-players-into-teams-by-score players num-teams adjusted-weights)
-        formatted-teams (format-team-assignments team-assignments)]
+        formatted-teams (print-teams team-assignments)]
     formatted-teams))
-
+(divide-and-format-players igraci room-for-test 5)
 ;algoritam koji cu sada implementirati je prilagodjeni Round Robin algoritam s tim sto cu na 
 ;specifican nacin soritrati igrace. Umesto da se rangiranje vrsi na osnovu zbira vrednosti njihovih atributa
 ;ili na osnovu nekih konkretnih atributa, vrste sobe, itd., ovaj put ce se za boljeg 
@@ -409,14 +411,7 @@
    (double (:theme player))
    (double (:frightened player))
    (double (:competitiveness player))])
-;sada pretvaram vrednosti u decimalne ovom funkcijom za svakog igraca, racunam standardnu devijaciju izmedju njih
-;i sortiram igrace po najmanjoj vrednosti iste
 
-(defn rank-players [players]
-  (let [players-with-deviation (map (fn [player]
-                                      [player (standard-deviation (player-attributes-list player))])
-                                    players)]
-    (map first (sort-by second players-with-deviation))))
 
 (defn round-robin-distribute [players num-teams]
   (let [player-std-devs (map (fn [player] [player (standard-deviation (player-attributes-list player))]) players)
@@ -429,6 +424,9 @@
             initial-teams
             sorted-players)))
 ;prethodna funkcija za formatiranje se moze primeniti i ovde tako da nema potrebe da je opet implementiram
+
+         
+
 
 
 
