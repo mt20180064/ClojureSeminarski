@@ -134,23 +134,24 @@
        players))
 
 
-(defn divide-players [players]
+(defn divide-players [players num-teams]
   (let [ensure-coef (fn [player] (if (nil? (:coef player)) (assoc player :coef 0) player))
         sorted-players (sort-by :coef > (map ensure-coef players))
-        team-1 []
-        team-2 []
-        team-3 []
-        teams (reduce (fn [[team1 team2 team3] player]
-                        (let [team-sizes (map count [team1 team2 team3])
-                              min-size (apply min team-sizes)
-                              min-index (first (keep-indexed #(when (= %2 min-size) %1) team-sizes))]
-                          (cond
-                            (= min-index 0) [(conj team1 player) team2 team3]
-                            (= min-index 1) [team1 (conj team2 player) team3]
-                            :else [team1 team2 (conj team3 player)])))
-                      [team-1 team-2 team-3]
-                      sorted-players)]
-    teams))
+        initial-teams (vec (repeat num-teams []))]
+    (reduce (fn [teams player]
+              (let [team-sizes (map count teams)
+                    min-size (apply min team-sizes)
+                    min-index (first (keep-indexed #(when (= %2 min-size) %1) team-sizes))
+                    updated-teams (update teams min-index conj player)]
+                updated-teams))
+            initial-teams
+            sorted-players)))
+
+
+
+
+
+
 
 
 ;ovo do sada je izostavilo uticaj toga da ti je igrac timski igrac ili kompetitivan
@@ -347,7 +348,7 @@
         formatted-teams (format-team-assignments team-assignments)]
     formatted-teams))
 
-(k-means-and-divide-teams igraci 4)
+
 
 
 
