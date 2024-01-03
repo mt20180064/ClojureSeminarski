@@ -344,6 +344,29 @@
         formatted-teams (format-team-assignments team-assignments)]
     formatted-teams))
 
+;sledeci algoritam delice igrace na osnovu vrednosti njihovih atributa, ali ce njima prethodno biti
+;dodati tezinski koeficijenti koji zavise i od tipa sobe koji se igra, prvo definisemo inicijalne koeficijente
+;razlika u odnosu na vec prethodno implementirani algoritam je sto je taj radio sa ukupnim koeficijenotm,
+;a sada varira svaka od vrednosti pojedinacno
+
+(def room-for-test
+{:horror 1, :linear 1, :tech 2, :knowledge 1, :division 4})
+(defn adjust-weights-based-on-room [room-data] 
+  (let [base-weights {:experience 0.4, :adroit 0.35, :mood 0.3, :teamplayer 0.25, :competitiveness 0.2, :theme 0.15, :frightened 0.1}]
+    (-> base-weights
+        (update :adroit #(if (= (:tech room-data) 1) (* % 1.5) %))
+        (update :teamplayer #(if (= (:linear room-data) 2) (* % 2) %))
+        (update :frightened #(if (= (:horror room-data) 1) (* % 3) %))
+        (update :theme #(if (= (:knowledge room-data) 1) (* % 2.2) %))
+        (update :experience #(if (= (:linear room-data) 1) (* % 1.5) %)))))
+
+;za igraca racunamo skor na osnovu njihovih atributa i odgovarajucih tezinskih koeficijenata
+(defn calculate-player-score [player weights]
+  (reduce + (map (fn [[attr weight]] (* (get player attr 0) weight)) weights)))
+
+
+
+
 
 
 
