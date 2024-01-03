@@ -284,8 +284,7 @@ duzina
  
 
 
-(def assignments (assign-players-to-nearest-centroid igraci initial-centroids))
-assignments
+
 ;grupise igrace na osnovu indeksa njima dodeljenog klastera i onda za svaku grupu
 ;racuna prosecnu vrednost relevantnih atributa pa na osnovu toga pravi nove centroide
 (defn update-centroids [players assignments k]
@@ -294,12 +293,10 @@ assignments
                     [i (mean (vec (map extract-features (get grouped-players i))))]) 
                   (range k)))))
 
-
-(update-centroids  igraci assignments 4)
-(assign-players-to-nearest-centroid igraci (update-centroids igraci assignments 4)) 
+;ovu funkciju sam delom prepisala sa gitHuba (deo gde se dodeljuju inicijalni centroidi), prilagodivsi je mojim kriterijumima i do sada napravljenim funkcijama
 (defn k-means-players [players k]
-  (let [initial-centroids (into {} (map-indexed (fn [i _] [i (extract-features (nth players i))]) (range k)))
-        max-iterations 100]
+  (let [initial-centroids (into {} (map-indexed (fn [i _] [i (extract-features (nth players i))]) (range k))) 
+        max-iterations 50]
     (loop [centroids initial-centroids
            n 0]
       (let [assignments (assign-players-to-nearest-centroid players centroids)
@@ -307,9 +304,53 @@ assignments
         (if (or (= centroids new-centroids) (>= n max-iterations))
           {:centroids centroids, :assignments assignments}
           (recur new-centroids (inc n)))))))
-
+;max-iterations sam postavila na 50 (nasumicno) da bih izbegla rizik od overflow, testiranjem cu kasnije utvrditi da li treba da bude neki drugi broj
 
 (k-means-players igraci 4)
+
+;ova fukcija treba da podeli igrace u timove na osnovu rezultata k-meansa.Prvo ce svakom timu dodeliti po jednog igraca iz svakog klastera
+;(nastavice sa takvom podelom sve dok ima dovoljno igraca u svim klasterima), a onda ce preostale igrace podeliti ravnomervno tako da timovi imaju
+;isto ili priblizno isti broj igraca. 
+(defn divide-players-into-teams [assignments players k]
+  (let [cluster-groups (group-by (fn [player] (get assignments player)) players)
+        team-assignments (reduce
+                          (fn [teams cluster-group]
+                            (reduce
+                             (fn [teams player]
+                               (let [team-index (->> teams
+                                                     (map-indexed (fn [idx team] [idx (count team)]))
+                                                     (sort-by second)
+                                                     (first)
+                                                     (first))]
+                                 (update teams team-index conj (:name player))))
+                             teams
+                             cluster-group))
+                          (vec (repeat k []))
+                          (vals cluster-groups))]
+    team-assignments))
+
+
+
+
+(def k-means-result (k-means-players igraci 4))
+(divide-players-into-teams (:assignments k-means-result) igraci 4)
+ ;ovo je nejasno tako da cu da formatiram sta vraca ova funkcija u novoj funkciji
+
+(defn format-team-assignments [team-assignments]
+  (let [team-names (map #(str "Team" %) (range 1 (inc (count team-assignments))))]
+    (zipmap team-names (map (fn [team] (str "\"" (clojure.string/join "\", \"" team) "\"")) team-assignments))))
+
+(def assignments (:assignments k-means-result))
+(def team-assignments (divide-players-into-teams assignments igraci 4))
+(def formatted-teams (format-team-assignments team-assignments))
+
+(println formatted-teams)
+
+
+
+
+ 
+
 
 
 
