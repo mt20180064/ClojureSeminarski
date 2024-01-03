@@ -286,7 +286,8 @@ duzina
 
 (def assignments (assign-players-to-nearest-centroid igraci initial-centroids))
 assignments
-
+;grupise igrace na osnovu indeksa njima dodeljenog klastera i onda za svaku grupu
+;racuna prosecnu vrednost relevantnih atributa pa na osnovu toga pravi nove centroide
 (defn update-centroids [players assignments k]
   (let [grouped-players (group-by #(get assignments %) players)]
     (into {} (map (fn [i]
@@ -296,7 +297,7 @@ assignments
 
 (update-centroids  igraci assignments 4)
 (assign-players-to-nearest-centroid igraci (update-centroids igraci assignments 4)) 
-(defn k-means-players [players k] 
+(defn k-means-players [players k]
   (let [initial-centroids (into {} (map-indexed (fn [i _] [i (extract-features (nth players i))]) (range k)))
         max-iterations 100]
     (loop [centroids initial-centroids
@@ -304,8 +305,9 @@ assignments
       (let [assignments (assign-players-to-nearest-centroid players centroids)
             new-centroids (update-centroids players assignments k)]
         (if (or (= centroids new-centroids) (>= n max-iterations))
-          centroids
+          {:centroids centroids, :assignments assignments}
           (recur new-centroids (inc n)))))))
+
 
 (k-means-players igraci 4)
 
