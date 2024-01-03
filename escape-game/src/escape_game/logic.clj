@@ -18,7 +18,7 @@
              {:name "Roki" :experience  4 :teamplayer 1 :adroit 4 :mood 1 :theme  2 :frightened  1 :competitiveness 2 }
              {:name"Teo" :experience  1 :teamplayer 1 :adroit 2 :mood 5 :theme  2 :frightened  1 :competitiveness 2 }
              {:name "Nelsi" :experience  3 :teamplayer 2 :adroit 3 :mood 4 :theme  1 :frightened  1 :competitiveness 2  }
-             {:name "Beli" :experience  5 :teamplayer 2 :adroit 1 :mood 2 ::theme  1 :frightened  2 :competitiveness 1  }
+             {:name "Beli" :experience  5 :teamplayer 2 :adroit 1 :mood 2 :theme  1 :frightened  2 :competitiveness 1  }
              {:name "Cole" :experience  4 :teamplayer 1 :adroit 5 :mood 1 :theme  1 :frightened 1 :competitiveness 1  }
              {:name "Bebinger" :experience  1 :teamplayer 1 :adroit 4 :mood 5 :theme  2 :frightened  2 :competitiveness 1 }
              ])
@@ -225,57 +225,64 @@ duzina
 
 (defn scale-value [x]
   (/ (- x 1) 4))
+ 
+ 
 
 (defn scale-player [player]
   (into {} (map (fn [[k v]] [k (if (number? v) (scale-value v) v)]) player)))
 
+
 (defn scale-players [players]
   (map scale-player players))
+
 ;nesto ocigledno nije u redu sa okruzenjem i ne mogu vise da gubim vreme
 ;na ucitavanje biblioteke tako da cu implementirati neku pocetnicku verziju k-meansa bez biblioteke
 ;prvo osnovne funkcije koje ce biti potrebne
 (defn euclidean-distance [vec1 vec2]
   (Math/sqrt (reduce + (map #(Math/pow (- %1 %2) 2) vec1 vec2))))
 
+
 (defn average [coll]
   (/ (reduce + coll) (count coll)))
+
+
 
 (defn mean [vectors]
   (map average (apply map vector vectors)))
 ;uzimamo vrednosti atributa koje cemo koristiti za grupisanje
 (defn extract-features [player]
   [(scale-value(player :experience) )(scale-value(player :adroit) )(scale-value(player :mood)) (scale-value(player :theme))])
+
+
 ;funkcija map prolazi kroz igrace i onda svakog od njih dodeljuje centroidu kom je najblizi 
 ;(if to obavlja unutar funkcije reduce koja vektor sa mapama igraca
 ;transformise tako sto deli igrace u klastere)
 (defn assign-players-to-nearest-centroid [players centroids]
-  (map (fn [player]
-         (let [player-features (extract-features player)]
-           (try
-             (let [assignment (reduce (fn [a b]
-                                        (let [centroid-a (centroids a)
-                                              centroid-b (centroids b)]
-                                          (if (< (euclidean-distance player-features centroid-a)
-                                                 (euclidean-distance player-features centroid-b))
-                                            a b)))
-                                      (keys centroids))]
-               (println "Assignment for player:" assignment) 
-               assignment)
-             (catch Exception e
-               (println "Exception for player:" player "Error:" e)
-               nil)))) 
-       players))
+  (let [player-assignments (map (fn [player]
+                                  (let [player-features (extract-features player)]
+                                    (try
+                                      (reduce (fn [a b]
+                                                (let [centroid-a (centroids a)
+                                                      centroid-b (centroids b)]
+                                                  (if (< (euclidean-distance player-features centroid-a)
+                                                         (euclidean-distance player-features centroid-b))
+                                                    a b)))
+                                              (keys centroids))
+                                      (catch Exception e
+                                        (println "Exception for player:" player "Error:" e)
+                                        nil))))
+                                players)]
+    (zipmap players player-assignments)))
 
 
 
 
-(def initial-centroids {0 [0.2 0.4 0.6 0.8]   
-                        1 [0.8 0.6 0.4 0.2]
-                        2 [0.4 0.6 0.8 0.2]
-                        3 [0.6 0.4 0.2 0.8]})
+(def initial-centroids {0 [0.1 0.15 0.2 0.25]   
+                        1 [0.3 0.35 0.4 0.45]
+                        2 [0.5 0.55 0.60 0.65]
+                        3 [0.70 0.75 0.80 0.85]})
  
 
-(assign-players-to-nearest-centroid igraci initial-centroids)
 
 (def assignments (assign-players-to-nearest-centroid igraci initial-centroids))
 assignments
@@ -283,21 +290,13 @@ assignments
 (defn update-centroids [players assignments k]
   (let [grouped-players (group-by #(get assignments %) players)]
     (into {} (map (fn [i]
-                    [i (mean (map extract-features (get grouped-players i)))])
+                    [i (mean (vec (map extract-features (get grouped-players i))))]) ; Eagerly evaluate the sequence
                   (range k)))))
 
-(defn k-means-players [players k]
-  (let [initial-centroids (into {} (map-indexed (fn [i _] [i (extract-features (nth players i))]) (range k)))
-        max-iterations 100]
-    (loop [centroids initial-centroids
-           n 0]
-      (let [assignments (assign-players-to-nearest-centroid players centroids)
-            new-centroids (update-centroids players assignments k)]
-        (if (or (= centroids new-centroids) (>= n max-iterations))
-          centroids
-          (recur new-centroids (inc n)))))))
 
-(k-means-players (scale-players igraci) 4)
+(update-centroids  igraci assignments 4)
+
+
 
 
 
