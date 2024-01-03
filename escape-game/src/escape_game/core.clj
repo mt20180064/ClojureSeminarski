@@ -85,7 +85,7 @@
   (cond
     (= number-of-divisions 2 ) (logic/pravljenjeEkipa (count players) players)
     (= number-of-divisions 3) (logic/create-and-print-balanced-teams players room) 
-    (= number-of-divisions 4) (println "alg za 4")
+    (= number-of-divisions 4) (println (logic/k-means-and-divide-teams players number-of-divisions))
     (= number-of-divisions 5) (println "alg za 5")
     (= number-of-divisions 6) (println "alg za 6")
     (= number-of-divisions 7) (println "alg za 7")

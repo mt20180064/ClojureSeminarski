@@ -89,7 +89,7 @@
       (recur (inc i) (my-into [(update (nth lista i) :tim team-added i)] list-with-teams))
       )
     ))
-duzina
+
  
 
 
@@ -306,7 +306,7 @@ duzina
           (recur new-centroids (inc n)))))))
 ;max-iterations sam postavila na 50 (nasumicno) da bih izbegla rizik od overflow, testiranjem cu kasnije utvrditi da li treba da bude neki drugi broj
 
-(k-means-players igraci 4)
+
 
 ;ova fukcija treba da podeli igrace u timove na osnovu rezultata k-meansa.Prvo ce svakom timu dodeliti po jednog igraca iz svakog klastera
 ;(nastavice sa takvom podelom sve dok ima dovoljno igraca u svim klasterima), a onda ce preostale igrace podeliti ravnomervno tako da timovi imaju
@@ -329,22 +329,23 @@ duzina
                           (vals cluster-groups))]
     team-assignments))
 
-
-
-
-(def k-means-result (k-means-players igraci 4))
-(divide-players-into-teams (:assignments k-means-result) igraci 4)
  ;ovo je nejasno tako da cu da formatiram sta vraca ova funkcija u novoj funkciji
 
 (defn format-team-assignments [team-assignments]
   (let [team-names (map #(str "Team" %) (range 1 (inc (count team-assignments))))]
     (zipmap team-names (map (fn [team] (str "\"" (clojure.string/join "\", \"" team) "\"")) team-assignments))))
 
-(def assignments (:assignments k-means-result))
-(def team-assignments (divide-players-into-teams assignments igraci 4))
-(def formatted-teams (format-team-assignments team-assignments))
 
-(println formatted-teams)
+;pravim funkcijju koja objedinjuje sve ovo da bih je lakse pozvala iz drugog namespace-a
+(defn k-means-and-divide-teams [players num-teams]
+  (let [k-means-result (k-means-players players num-teams)
+        assignments (:assignments k-means-result)
+        team-assignments (divide-players-into-teams assignments players num-teams)
+        formatted-teams (format-team-assignments team-assignments)]
+    formatted-teams))
+
+
+
 
 
 
