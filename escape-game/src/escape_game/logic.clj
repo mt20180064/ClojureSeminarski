@@ -275,7 +275,7 @@ duzina
     (zipmap players player-assignments)))
 
 
-
+;za sada su nasumicno odabrani
 
 (def initial-centroids {0 [0.1 0.15 0.2 0.25]   
                         1 [0.3 0.35 0.4 0.45]
@@ -290,11 +290,24 @@ assignments
 (defn update-centroids [players assignments k]
   (let [grouped-players (group-by #(get assignments %) players)]
     (into {} (map (fn [i]
-                    [i (mean (vec (map extract-features (get grouped-players i))))]) ; Eagerly evaluate the sequence
+                    [i (mean (vec (map extract-features (get grouped-players i))))]) 
                   (range k)))))
 
 
 (update-centroids  igraci assignments 4)
+(assign-players-to-nearest-centroid igraci (update-centroids igraci assignments 4)) 
+(defn k-means-players [players k] 
+  (let [initial-centroids (into {} (map-indexed (fn [i _] [i (extract-features (nth players i))]) (range k)))
+        max-iterations 100]
+    (loop [centroids initial-centroids
+           n 0]
+      (let [assignments (assign-players-to-nearest-centroid players centroids)
+            new-centroids (update-centroids players assignments k)]
+        (if (or (= centroids new-centroids) (>= n max-iterations))
+          centroids
+          (recur new-centroids (inc n)))))))
+
+(k-means-players igraci 4)
 
 
 
