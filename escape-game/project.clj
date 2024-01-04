@@ -5,8 +5,7 @@
             :url "https://www.eclipse.org/legal/epl-2.0/"}
   :dependencies [[org.clojure/clojure "1.11.1"]
                  [org.clojure/java.jdbc "0.7.10"]
-                 [com.h2database/h2 "1.4.200"]
-                 [incanter "1.9.3"]
+                 [com.h2database/h2 "1.4.200"] 
                  ]
   :main ^:skip-aot escape-game.core
   :target-path "target/%s"

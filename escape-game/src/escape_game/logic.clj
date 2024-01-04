@@ -1,6 +1,6 @@
 (ns logic
   (:require [clojure.string]
-            [incanter.core]))
+            ))
 
 (defn my-into
   [target additions]
