@@ -1,15 +1,6 @@
-
 (ns escape-game.core
- 
   (:require [clojure.string :as string])
   (:require [escape_game.logic]))
-
-
-
-
-;u ovom namespace-u dolazimo do podataka o sobi i o igracima na osnovu kojih
-;ce algoritam vrsiti procenu kako bi bilo najoptimalnije podeliti igrace u odredjeni broj ekipa
-;escape room 
 
 (defn prompt [question]
   (println question)
@@ -54,7 +45,6 @@
       divisions
       (throw (RuntimeException. "No matching division found")))))
 
-
 (defn prompt-for-division [divisions]
   (loop []
     (let [chosen-division (prompt (str "You can divide into "
@@ -69,7 +59,6 @@
         (do (println "Invalid input. Please enter a number.")
             (recur))))))
 
-
 (defn get-room-info [num-players]
   (let [division (prompt-for-division (calculate-divisions num-players))]
     {:horror (get-valid-input "Now about the room. Is the one you are playing classified as horror? 1-yes, 2-no" 1 2)
@@ -77,8 +66,6 @@
      :tech (get-valid-input "Is it full of high-tech mechanisms or more old school based on riddles? (ask your game-master) 1-mechanisms, 2-riddles" 1 2)
      :knowledge (get-valid-input "Does it require knowledge about the topic? 1-yes, 2-no" 1 2)
      :division division}))
-
-
 
 (defn room-data-maker [num-players]
   (let [room-data (get-room-info num-players)]
@@ -117,13 +104,12 @@
     (println "Used algorithm is:" algorithm)
     ((resolve algorithm) players room-data num-teams)))
 
-
-
 (defn -main
   [& args]
   (let [players (players-vector-maker)
         room-data (room-data-maker (count players))]
     (choose-and-run-algorithm logic/igraci logic/room-for-test 3)))
+
   
 
 
