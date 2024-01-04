@@ -96,27 +96,34 @@
     (prn user-info)
     user-info))
 
+(defn choose-and-run-algorithm [players room-data num-teams]
+  (let [algorithm (cond
+                    (<= num-teams 4)
+                    (cond
+                      (= (:linear room-data) 1) (if (< (count players) 8)
+                                                  'logic/create-and-print-players-across-teams
+                                                  'logic/create-and-print-k-means-teams)
+                      (= (:linear room-data) 2) 'logic/create-and-print-balanced-teams
+                      :else 'logic/create-and-print-randomly-made-teams)
+                    (<= num-teams 7)
+                    (cond
+                      (= (:linear room-data) 1) (if (< (count players) 8)
+                                                  'logic/create-and-print-divisions-by-score
+                                                  'logic/create-and-print-round-robin-teams)
+                      (= (:linear room-data) 2) 'logic/create-and-print-divisions-by-score
+                      :else 'logic/create-and-print-randomly-made-teams)
+                    :else 'logic/create-and-print-randomly-made-teams)]
 
-  
-
-(defn algorythms-by-divisions [number-of-divisions players room]
-  (cond
-    (= number-of-divisions 2) (logic/print-teams (logic/distribute-players-across-teams (logic/sort-everything players) room number-of-divisions))
-    (= number-of-divisions 3) (logic/create-and-print-balanced-teams players room number-of-divisions) 
-    (= number-of-divisions 4) (println (logic/k-means-and-divide-teams players room number-of-divisions))
-    (= number-of-divisions 5) (logic/divisions-by-score players room number-of-divisions)
-    (= number-of-divisions 6)  (logic/create-and-print-round-robin-teams players room number-of-divisions)
-    (= number-of-divisions 7) (logic/print-teams(logic/distribute-players-randomly players room number-of-divisions)) 
-    ))
+    (println "Used algorithm is:" algorithm)
+    ((resolve algorithm) players room-data num-teams)))
 
 
 
 (defn -main
-
   [& args]
   (let [players (players-vector-maker)
         room-data (room-data-maker (count players))]
-    (algorythms-by-divisions (get room-data :division) players room-data)))
+    (choose-and-run-algorithm logic/igraci logic/room-for-test 3)))
   
 
 

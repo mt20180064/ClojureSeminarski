@@ -1,33 +1,26 @@
 (ns logic
   (:require [clojure.string]
             [incanter.core]
-            [incanter.stats :as stats]))
+            ))
 (defn my-into
   [target additions]
   (apply conj additions target))
-
-
 
 (def igraci [{:name "Nina" :experience 1 :teamplayer 1 :adroit 3 :mood 5 :theme 2 :frightened 2 :competitiveness 2 }
              {:name "Anis" :experience  4 :teamplayer 1 :adroit 4 :mood 2 :theme 1 :frightened  1 :competitiveness 1 }
              {:name "Điri" :experience  5 :teamplayer 2 :adroit 1 :mood 5 :theme  2 :frightened 2 :competitiveness 1 }
              {:name "Joča" :experience  2 :teamplayer 1 :adroit 3 :mood 1 :theme  1 :frightened  1 :competitiveness 2 }
              {:name "Maša" :experience  5 :teamplayer 2 :adroit 4 :mood 2 :theme  2 :frightened  2 :competitiveness 1 }
-            ;{:name "Nemica" :experience 1 :teamplayer 1 :adroit 3 :mood 2 :theme  2 :frightened  1 :competitiveness 2 }
-            ; {:name "Roko" :experience 5 :teamplayer 2 :adroit 1 :mood 3 :theme  2 :frightened  2 :competitiveness 1 }
-            ; {:name "Roki" :experience  4 :teamplayer 1 :adroit 4 :mood 1 :theme  2 :frightened  1 :competitiveness 2 }
-            ; {:name"Teo" :experience  1 :teamplayer 1 :adroit 2 :mood 5 :theme  2 :frightened  1 :competitiveness 2 }
-           ; {:name "Nelsi" :experience  3 :teamplayer 2 :adroit 3 :mood 4 :theme  1 :frightened  1 :competitiveness 2  }
-            ;{:name "Beli" :experience  5 :teamplayer 2 :adroit 1 :mood 2 :theme  1 :frightened  2 :competitiveness 1  }
-             ;{:name "Cole" :experience  4 :teamplayer 1 :adroit 5 :mood 1 :theme  1 :frightened 1 :competitiveness 1  }
-             ;{:name "Bebinger" :experience  1 :teamplayer 1 :adroit 4 :mood 5 :theme  2 :frightened  2 :competitiveness 1 }
+            {:name "Nemica" :experience 1 :teamplayer 1 :adroit 3 :mood 2 :theme  2 :frightened  1 :competitiveness 2 }
+             {:name "Roko" :experience 5 :teamplayer 2 :adroit 1 :mood 3 :theme  2 :frightened  2 :competitiveness 1 }
+             {:name "Roki" :experience  4 :teamplayer 1 :adroit 4 :mood 1 :theme  2 :frightened  1 :competitiveness 2 }
+             {:name"Teo" :experience  1 :teamplayer 1 :adroit 2 :mood 5 :theme  2 :frightened  1 :competitiveness 2 }
+            {:name "Nelsi" :experience  3 :teamplayer 2 :adroit 3 :mood 4 :theme  1 :frightened  1 :competitiveness 2  }
+            {:name "Beli" :experience  5 :teamplayer 2 :adroit 1 :mood 2 :theme  1 :frightened  2 :competitiveness 1  }
+             {:name "Cole" :experience  4 :teamplayer 1 :adroit 5 :mood 1 :theme  1 :frightened 1 :competitiveness 1  }
+             {:name "Bebinger" :experience  1 :teamplayer 1 :adroit 4 :mood 5 :theme  2 :frightened  2 :competitiveness 1 }
              ])
 
-
-
- 
-(def duzina (count igraci))
-;duzina
 (defn print-teams [balanced-teams]
   (let [format-team (fn [team]
                       (clojure.string/join ", " (map :name team)))]
@@ -39,7 +32,6 @@
         (let [team-str (format-team (first teams))
               new-result (str result "Team " (inc idx) ": " team-str "\n")]
           (recur (inc idx) (rest teams) new-result))))))
-
 
 (defn check-topic
   [igrac]
@@ -88,6 +80,7 @@
 
  
 (defn distribute-players-across-teams [players room-data num-teams ] 
+ (sort-everything players)
   (let [total-players (count players)]
     (loop [front 0
            back (dec total-players)
@@ -110,8 +103,6 @@
                                 (str "Team " (inc idx) ": " (clojure.string/join ", " (map :name team))))
                               few-teams)]
       (println team))))
-
-
 
 
 
@@ -450,32 +441,11 @@
 
   
   
-(defn choose-and-run-algorithm [players room-data num-teams]
-  (let [algorithm (cond 
-                    (<= num-teams 4)
-                    (cond
-                      (= (:linear room-data) 1) (if (< (count players) 8)
-                                                  'create-and-print-players-across-teams
-                                                  'create-and-print-k-means-teams)
-                      (= (:linear room-data) 2) 'create-and-print-balanced-teams
-                      :else 'create-and-print-randomly-made-teams) 
-                    (<= num-teams 7)
-                    (cond
-                      (= (:linear room-data) 1) (if (< (count players) 8)
-                                                  'create-and-print-divisions-by-score
-                                                  'create-and-print-round-robin-teams)
-                      (= (:linear room-data) 2) 'create-and-print-divisions-by-score
-                      :else 'create-and-print-randomly-made-teams) 
-                    :else 'create-and-print-randomly-made-teams)]
 
-    (println "Used algorithm is:" algorithm) 
-    ((resolve algorithm) players room-data num-teams)))
  
-(def room-for-test
-  {:horror 1 :linear 1 :knowledge 1 :tech 2})
 
- (choose-and-run-algorithm igraci room-for-test 2)
- 
+ (def room-for-test
+   {:horror 2 :linear 1 :tech 1 :knowledge 2})
 
 
 
