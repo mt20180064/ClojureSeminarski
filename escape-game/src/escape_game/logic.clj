@@ -284,17 +284,6 @@
                                 players)]
     (zipmap players player-assignments)))
 
-
-;za sada su nasumicno odabrani
-
-(def initial-centroids {0 [0.1 0.15 0.2 0.25]   
-                        1 [0.3 0.35 0.4 0.45]
-                        2 [0.5 0.55 0.60 0.65]
-                        3 [0.70 0.75 0.80 0.85]})
- 
-
-
-
 ;grupise igrace na osnovu indeksa njima dodeljenog klastera i onda za svaku grupu
 ;racuna prosecnu vrednost relevantnih atributa pa na osnovu toga pravi nove centroide
 (defn update-centroids [players assignments k]
@@ -377,18 +366,19 @@
   (reduce + (map (fn [[attr weight]] (* (get player attr 0) weight)) weights)))
 
 ;podela igraca u timove na osnovu skora tako da svaki tim bude priblizno jednake snage
-
-;mod je tu da bi osiguralo da ce se zavrsiti 
 (defn divide-players-into-teams-by-score [players num-teams adjusted-weights]
   (let [player-scores (map #(calculate-player-score % adjusted-weights) players)
         sorted-players (map first (sort-by second > (zipmap players player-scores)))
-        teams (reduce (fn [teams player]
-                        (let [team-index (mod (count (first teams)) num-teams)
-                              updated-teams (update teams team-index conj player)]
-                          (conj (vec (rest updated-teams)) (first updated-teams))))
-                      (vec (repeat num-teams []))
-                      sorted-players)]
-    (vec (sort-by count > teams))))
+        initial-teams (vec (repeat num-teams []))]
+    (reduce (fn [teams player]
+              (let [team-index (->> teams
+                                    (map-indexed (fn [idx team] [idx (count team)]))
+                                    (sort-by second)
+                                    (first)
+                                    (first))]
+                (update teams team-index conj player)))
+            initial-teams
+            sorted-players)))
 
 
 
@@ -398,7 +388,7 @@
         team-assignments (divide-players-into-teams-by-score players num-teams adjusted-weights)
         formatted-teams (print-teams team-assignments)]
     formatted-teams))
-(divide-and-format-players igraci room-for-test 3)
+
 ;algoritam koji cu sada implementirati je prilagodjeni Round Robin algoritam s tim sto cu na 
 ;specifican nacin soritrati igrace. Umesto da se rangiranje vrsi na osnovu zbira vrednosti njihovih atributa
 ;ili na osnovu nekih konkretnih atributa, vrste sobe, itd., ovaj put ce se za boljeg 
