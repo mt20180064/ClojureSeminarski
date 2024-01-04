@@ -101,7 +101,7 @@
     ))
 
  
-(defn distribute-players-across-teams [players num-teams]
+(defn distribute-players-across-teams [players room-data num-teams ] 
   (let [total-players (count players)]
     (loop [front 0
            back (dec total-players)
@@ -118,7 +118,7 @@
                                 (update team-index conj (nth players back)))]
           (recur (inc front) (dec back) updated-teams))))))
 
-(print-teams (distribute-players-across-teams (sort-everything igraci) 4))
+
 (def room-for-test
   {:horror 2 :linear 2 :knowledge 1 :tech 1})
 
@@ -228,7 +228,7 @@
 
 
 
-(create-and-print-balanced-teams igraci room-for-test 5)
+
 ;za algoritam za podelu na 4 pokusacu da koristim k-means algoritam koristeci biblioteku Incanter.
 ;iako su vrednosti atributa za igrace dobro rasporedjene (1-5) prvo cu ih normalizovati kako bi rezultati bili optimalniji
 
@@ -336,7 +336,7 @@
 
 
 ;pravim funkcijju koja objedinjuje sve ovo da bih je lakse pozvala iz drugog namespace-a
-(defn k-means-and-divide-teams [players num-teams]
+(defn k-means-and-divide-teams [players room-data num-teams]
   (let [k-means-result (k-means-players players num-teams)
         assignments (:assignments k-means-result)
         team-assignments (divide-players-into-teams assignments players num-teams)
@@ -383,7 +383,7 @@
 
 
 
-(defn divide-and-format-players [players room-data num-teams]
+(defn divisions-by-score[players room-data num-teams]
   (let [adjusted-weights (adjust-weights-based-on-room room-data)
         team-assignments (divide-players-into-teams-by-score players num-teams adjusted-weights)
         formatted-teams (print-teams team-assignments)]
@@ -411,7 +411,7 @@
    (double (:competitiveness player))])
 
 
-(defn round-robin-distribute [players num-teams]
+(defn round-robin-distribute [players room-data num-teams]
   (let [player-std-devs (map (fn [player] [player (standard-deviation (player-attributes-list player))]) players)
         sorted-players (map first (sort-by second player-std-devs))
         initial-teams (vec (repeat num-teams []))]
@@ -427,7 +427,7 @@
 
 ;ubacicu i algoritam za nasumicnu raspodelu kako bih kasnije poredila rezultate
 ;jedino o cemu algoritam vodi racuna je da bude jednak ili priblizno jednak broj igraca u svim timovima (obezbedjeno mod funkcijom)
-(defn distribute-players-randomly [players num-teams]
+(defn distribute-players-randomly [players room-data num-teams]
   (let [shuffled-players (shuffle players)
         initial-teams (vec (repeat num-teams []))]
     (reduce (fn [teams player]
@@ -437,8 +437,34 @@
             initial-teams
             shuffled-players)))
 
+;sada cu implementirati funkciju koja proverava da li neki od algoritama vracaju
+;potpuno iste timove. To ce predstavljati prvi kriterijum u odabiru najuspesnijeg algoritma
+
+(defn compare-algorithms-for-same-teams [algorithm-results]
+  (let [grouped-results (group-by :result algorithm-results)
+        duplicate-results (filter #(> (count (second %)) 1) grouped-results)]
+    (if (seq duplicate-results)
+      (first (first (second (first duplicate-results))))
+      nil)))
 
 
+(defn execute-and-compare-algorithms [players room-data num-teams  algorithms]
+  (let [algorithm-results (map #(let [result (% players num-teams room-data)]
+                                  {:algorithm % :result result})
+                               algorithms)]
+    (compare-algorithms-for-same-teams algorithm-results)))
+(def algorithms [distribute-players-across-teams create-and-print-balanced-teams k-means-and-divide-teams divisions-by-score round-robin-distribute distribute-players-randomly])
+
+(defn execute-and-compare-algorithms-with-print [players num-teams room-data algorithms]
+  (let [algorithm-results (map #(let [result (% players num-teams room-data)]
+                                  {:algorithm % :result result})
+                               algorithms)]
+    (doseq [ar algorithm-results]
+      (println "Algorithm:" (:algorithm ar) "Result:" (:result ar))) ; Print each algorithm's result
+    (compare-algorithms-for-same-teams algorithm-results)))
+
+
+(execute-and-compare-algorithms-with-print igraci room-for-test  3 algorithms)
 
 
 

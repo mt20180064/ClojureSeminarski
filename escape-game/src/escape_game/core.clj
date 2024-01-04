@@ -101,12 +101,12 @@
 
 (defn algorythms-by-divisions [number-of-divisions players room]
   (cond
-    (= number-of-divisions 2) (logic/print-teams (logic/distribute-players-across-teams (logic/sort-everything players) number-of-divisions))
+    (= number-of-divisions 2) (logic/print-teams (logic/distribute-players-across-teams (logic/sort-everything players) room number-of-divisions))
     (= number-of-divisions 3) (logic/create-and-print-balanced-teams players room number-of-divisions) 
-    (= number-of-divisions 4) (println (logic/k-means-and-divide-teams players number-of-divisions))
-    (= number-of-divisions 5) (logic/divide-and-format-players players room number-of-divisions)
-    (= number-of-divisions 6) (logic/print-teams (logic/round-robin-distribute players number-of-divisions))
-    (= number-of-divisions 7) (logic/print-teams(logic/distribute-players-randomly players number-of-divisions)) 
+    (= number-of-divisions 4) (println (logic/k-means-and-divide-teams players room number-of-divisions))
+    (= number-of-divisions 5) (logic/divisions-by-score players room number-of-divisions)
+    (= number-of-divisions 6) (logic/print-teams (logic/round-robin-distribute players room number-of-divisions))
+    (= number-of-divisions 7) (logic/print-teams(logic/distribute-players-randomly players room number-of-divisions)) 
     ))
 
 
