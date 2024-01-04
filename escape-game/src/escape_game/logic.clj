@@ -13,14 +13,14 @@
              {:name "Điri" :experience  5 :teamplayer 2 :adroit 1 :mood 5 :theme  2 :frightened 2 :competitiveness 1 }
              {:name "Joča" :experience  2 :teamplayer 1 :adroit 3 :mood 1 :theme  1 :frightened  1 :competitiveness 2 }
              {:name "Maša" :experience  5 :teamplayer 2 :adroit 4 :mood 2 :theme  2 :frightened  2 :competitiveness 1 }
-             {:name "Nemica" :experience 1 :teamplayer 1 :adroit 3 :mood 2 :theme  2 :frightened  1 :competitiveness 2 }
-             {:name "Roko" :experience 5 :teamplayer 2 :adroit 1 :mood 3 :theme  2 :frightened  2 :competitiveness 1 }
-             {:name "Roki" :experience  4 :teamplayer 1 :adroit 4 :mood 1 :theme  2 :frightened  1 :competitiveness 2 }
-             {:name"Teo" :experience  1 :teamplayer 1 :adroit 2 :mood 5 :theme  2 :frightened  1 :competitiveness 2 }
-             {:name "Nelsi" :experience  3 :teamplayer 2 :adroit 3 :mood 4 :theme  1 :frightened  1 :competitiveness 2  }
-             {:name "Beli" :experience  5 :teamplayer 2 :adroit 1 :mood 2 :theme  1 :frightened  2 :competitiveness 1  }
-             {:name "Cole" :experience  4 :teamplayer 1 :adroit 5 :mood 1 :theme  1 :frightened 1 :competitiveness 1  }
-             {:name "Bebinger" :experience  1 :teamplayer 1 :adroit 4 :mood 5 :theme  2 :frightened  2 :competitiveness 1 }
+            ;{:name "Nemica" :experience 1 :teamplayer 1 :adroit 3 :mood 2 :theme  2 :frightened  1 :competitiveness 2 }
+            ; {:name "Roko" :experience 5 :teamplayer 2 :adroit 1 :mood 3 :theme  2 :frightened  2 :competitiveness 1 }
+            ; {:name "Roki" :experience  4 :teamplayer 1 :adroit 4 :mood 1 :theme  2 :frightened  1 :competitiveness 2 }
+            ; {:name"Teo" :experience  1 :teamplayer 1 :adroit 2 :mood 5 :theme  2 :frightened  1 :competitiveness 2 }
+           ; {:name "Nelsi" :experience  3 :teamplayer 2 :adroit 3 :mood 4 :theme  1 :frightened  1 :competitiveness 2  }
+            ;{:name "Beli" :experience  5 :teamplayer 2 :adroit 1 :mood 2 :theme  1 :frightened  2 :competitiveness 1  }
+             ;{:name "Cole" :experience  4 :teamplayer 1 :adroit 5 :mood 1 :theme  1 :frightened 1 :competitiveness 1  }
+             ;{:name "Bebinger" :experience  1 :teamplayer 1 :adroit 4 :mood 5 :theme  2 :frightened  2 :competitiveness 1 }
              ])
 
 
@@ -85,20 +85,6 @@
    (recur (inc i) (sort-by :summary (my-into [(sum-everything (nth igraci i))] sortiran))))))
 
 
-(defn team-added
-  [tim i]
-  (if (clojure.core/even? i)
-    1
-    2))
-
-(defn give-teams
-  [n lista]
-  (loop [i 0 list-with-teams '()]
-    (if (= i n )
-      list-with-teams
-      (recur (inc i) (my-into [(update (nth lista i) :tim team-added i)] list-with-teams))
-      )
-    ))
 
  
 (defn distribute-players-across-teams [players room-data num-teams ] 
@@ -118,9 +104,15 @@
                                 (update team-index conj (nth players back)))]
           (recur (inc front) (dec back) updated-teams))))))
 
+(defn create-and-print-players-across-teams [players room-data num-teams]
+  (let [few-teams (distribute-players-across-teams players room-data num-teams)]
+    (doseq [team (map-indexed (fn [idx team]
+                                (str "Team " (inc idx) ": " (clojure.string/join ", " (map :name team))))
+                              few-teams)]
+      (println team))))
 
-(def room-for-test
-  {:horror 2 :linear 2 :knowledge 1 :tech 1})
+
+
 
 
 
@@ -219,12 +211,16 @@
 
 
 ;sledecu funkciju pravim da bih lakse pozvala ceo ovaj algoritam iz drugog namespace-a
- (defn create-and-print-balanced-teams [players room-data num-teams]
+(defn create-and-print-balanced-teams [players room-data num-teams]
   (let [players-with-coef (add-coefs-to-players players room-data)
         divided-teams (divide-players players-with-coef num-teams)
         threshold (calculate-threshold room-data divided-teams)
         balanced-teams (redivide-if-unbalanced divided-teams players-with-coef threshold)]
-    (print-teams balanced-teams)))
+    (doseq [team (map-indexed (fn [idx team]
+                                (str "Team " (inc idx) ": " (clojure.string/join ", " (map :name team))))
+                              balanced-teams)]
+      (println team))))
+
 
 
 
@@ -237,13 +233,6 @@
 (defn scale-value [x]
   (/ (- x 1) 4))
  
- 
-(defn scale-player [player]
-  (into {} (map (fn [[k v]] [k (if (number? v) (scale-value v) v)]) player)))
-
-
-(defn scale-players [players]
-  (map scale-player players))
 
 ;nesto ocigledno nije u redu sa okruzenjem i ne mogu vise da gubim vreme
 ;na ucitavanje biblioteke tako da cu implementirati neku pocetnicku verziju k-meansa bez biblioteke
@@ -310,38 +299,38 @@
 ;ova fukcija treba da podeli igrace u timove na osnovu rezultata k-meansa.Prvo ce svakom timu dodeliti po jednog igraca iz svakog klastera
 ;(nastavice sa takvom podelom sve dok ima dovoljno igraca u svim klasterima), a onda ce preostale igrace podeliti ravnomervno tako da timovi imaju
 ;isto ili priblizno isti broj igraca. 
-(defn divide-players-into-teams [assignments players k]
-  (let [cluster-groups (group-by (fn [player] (get assignments player)) players)
-        team-assignments (reduce
-                          (fn [teams cluster-group]
-                            (reduce
-                             (fn [teams player]
-                               (let [team-index (->> teams
-                                                     (map-indexed (fn [idx team] [idx (count team)]))
-                                                     (sort-by second)
-                                                     (first)
-                                                     (first))]
-                                 (update teams team-index conj (:name player))))
-                             teams
-                             cluster-group))
-                          (vec (repeat k []))
-                          (vals cluster-groups))]
-    team-assignments))
-
- ;ovo je nejasno tako da cu da formatiram sta vraca ova funkcija u novoj funkciji
-
-(defn format-team-assignments [team-assignments]
-  (let [team-names (map #(str "Team" %) (range 1 (inc (count team-assignments))))]
-    (zipmap team-names (map (fn [team] (str "\"" (clojure.string/join "\", \"" team) "\"")) team-assignments))))
+(defn divide-players-into-teams [assignments players num-teams]
+  (let [cluster-groups (group-by #(get assignments %) players)] 
+    (let [team-assignments (reduce
+                            (fn [teams cluster-group]
+                              (reduce
+                               (fn [teams player]
+                                 (let [team-index (->> teams
+                                                       (map-indexed (fn [idx team] [idx (count team)]))
+                                                       (sort-by second)
+                                                       (first)
+                                                       (first))] 
+                                   (update teams team-index conj (:name player))))
+                               teams
+                               cluster-group))
+                            (vec (repeat num-teams []))
+                            (vals cluster-groups))] 
+      team-assignments)))
 
 
 ;pravim funkcijju koja objedinjuje sve ovo da bih je lakse pozvala iz drugog namespace-a
-(defn k-means-and-divide-teams [players room-data num-teams]
+(defn create-and-print-k-means-teams [players room-data num-teams]
   (let [k-means-result (k-means-players players num-teams)
         assignments (:assignments k-means-result)
-        team-assignments (divide-players-into-teams assignments players num-teams)
-        formatted-teams (format-team-assignments team-assignments)]
-    formatted-teams))
+        teams (divide-players-into-teams assignments players num-teams)
+        formatted-teams (map-indexed (fn [idx team]
+                                       (str "Team " (inc idx) ": " (clojure.string/join ", " team))) teams)]
+    (do (doseq [team formatted-teams]
+          (println team)) 
+       )))
+ 
+
+
 
 
 
@@ -383,11 +372,16 @@
 
 
 
-(defn divisions-by-score[players room-data num-teams]
+(defn create-and-print-divisions-by-score [players room-data num-teams]
   (let [adjusted-weights (adjust-weights-based-on-room room-data)
-        team-assignments (divide-players-into-teams-by-score players num-teams adjusted-weights)
-        formatted-teams (print-teams team-assignments)]
-    formatted-teams))
+        team-assignments (divide-players-into-teams-by-score players num-teams adjusted-weights)]
+    (doseq [team (map-indexed (fn [idx team]
+                                (str "Team " (inc idx) ": " (clojure.string/join ", " (map :name team))))
+                              team-assignments)]
+      (println team))))
+
+
+
 
 ;algoritam koji cu sada implementirati je prilagodjeni Round Robin algoritam s tim sto cu na 
 ;specifican nacin soritrati igrace. Umesto da se rangiranje vrsi na osnovu zbira vrednosti njihovih atributa
@@ -416,12 +410,20 @@
         sorted-players (map first (sort-by second player-std-devs))
         initial-teams (vec (repeat num-teams []))]
     (reduce (fn [teams player]
-              (let [team-index (mod (count (first teams)) num-teams)
-                    updated-teams (update teams team-index conj player)]
-                (conj (vec (rest updated-teams)) (first updated-teams))))
+              (let [team-index (->> teams
+                                    (map-indexed (fn [idx team] [idx (count team)]))
+                                    (sort-by second)
+                                    (first)
+                                    (first))]
+                (update teams team-index conj player)))
             initial-teams
             sorted-players)))
-;prethodna funkcija za formatiranje se moze primeniti i ovde tako da nema potrebe da je opet implementiram
+(defn create-and-print-round-robin-teams [players room-data num-teams]
+  (let [round-robin-teams (round-robin-distribute players room-data num-teams)]
+    (doseq [team (map-indexed (fn [idx team]
+                                (str "Team " (inc idx) ": " (clojure.string/join ", " (map :name team))))
+                              round-robin-teams)]
+      (println team))))
 
          
 
@@ -431,40 +433,53 @@
   (let [shuffled-players (shuffle players)
         initial-teams (vec (repeat num-teams []))]
     (reduce (fn [teams player]
-              (let [team-index (mod (count (first teams)) num-teams)
-                    updated-teams (update teams team-index conj player)]
-                (conj (vec (rest updated-teams)) (first updated-teams))))
+              (let [team-index (->> teams
+                                    (map-indexed (fn [idx team] [idx (count team)]))
+                                    (sort-by second)
+                                    (first)
+                                    (first))]
+                (update teams team-index conj player)))
             initial-teams
             shuffled-players)))
+(defn create-and-print-randomly-made-teams [players room-data num-teams]
+  (let [randomly-teams (distribute-players-randomly players room-data num-teams)]
+    (doseq [team (map-indexed (fn [idx team]
+                                (str "Team " (inc idx) ": " (clojure.string/join ", " (map :name team))))
+                              randomly-teams)]
+      (println team))))
 
-;sada cu implementirati funkciju koja proverava da li neki od algoritama vracaju
-;potpuno iste timove. To ce predstavljati prvi kriterijum u odabiru najuspesnijeg algoritma
+  
+  
+(defn choose-and-run-algorithm [players room-data num-teams]
+  (let [algorithm (cond 
+                    (<= num-teams 4)
+                    (cond
+                      (= (:linear room-data) 1) (if (< (count players) 8)
+                                                  'create-and-print-players-across-teams
+                                                  'create-and-print-k-means-teams)
+                      (= (:linear room-data) 2) 'create-and-print-balanced-teams
+                      :else 'create-and-print-randomly-made-teams) 
+                    (<= num-teams 7)
+                    (cond
+                      (= (:linear room-data) 1) (if (< (count players) 8)
+                                                  'create-and-print-divisions-by-score
+                                                  'create-and-print-round-robin-teams)
+                      (= (:linear room-data) 2) 'create-and-print-divisions-by-score
+                      :else 'create-and-print-randomly-made-teams) 
+                    :else 'create-and-print-randomly-made-teams)]
 
-(defn compare-algorithms-for-same-teams [algorithm-results]
-  (let [grouped-results (group-by :result algorithm-results)
-        duplicate-results (filter #(> (count (second %)) 1) grouped-results)]
-    (if (seq duplicate-results)
-      (first (first (second (first duplicate-results))))
-      nil)))
+    (println "Used algorithm is:" algorithm) 
+    ((resolve algorithm) players room-data num-teams)))
+ 
+(def room-for-test
+  {:horror 1 :linear 1 :knowledge 1 :tech 2})
+
+ (choose-and-run-algorithm igraci room-for-test 2)
+ 
 
 
-(defn execute-and-compare-algorithms [players room-data num-teams  algorithms]
-  (let [algorithm-results (map #(let [result (% players num-teams room-data)]
-                                  {:algorithm % :result result})
-                               algorithms)]
-    (compare-algorithms-for-same-teams algorithm-results)))
-(def algorithms [distribute-players-across-teams create-and-print-balanced-teams k-means-and-divide-teams divisions-by-score round-robin-distribute distribute-players-randomly])
-
-(defn execute-and-compare-algorithms-with-print [players num-teams room-data algorithms]
-  (let [algorithm-results (map #(let [result (% players num-teams room-data)]
-                                  {:algorithm % :result result})
-                               algorithms)]
-    (doseq [ar algorithm-results]
-      (println "Algorithm:" (:algorithm ar) "Result:" (:result ar))) ; Print each algorithm's result
-    (compare-algorithms-for-same-teams algorithm-results)))
 
 
-(execute-and-compare-algorithms-with-print igraci room-for-test  3 algorithms)
 
 
 
