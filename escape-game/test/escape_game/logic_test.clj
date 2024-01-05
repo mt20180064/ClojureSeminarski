@@ -57,3 +57,52 @@
           (is (not-any? empty? teams))
           (when (< (count long-list-of-players) (* 2 num-teams))
             (is (nil? (logic/round-robin-distribute long-list-of-players room-data num-teams)))))))))
+
+(deftest test-divide-players-into-teams
+  (let [long-list-of-players (concat players players players players)
+        num-teams-list [2 3 4 5 6 7]]
+
+    (doseq [num-teams num-teams-list]
+      (let [assignments (logic/distribute-players-randomly long-list-of-players nil num-teams) 
+            selected-players (take (* num-teams 3) long-list-of-players)]
+
+        (testing (str "Testing with subset of players and " num-teams " teams")
+          (let [teams (logic/divide-players-into-teams assignments selected-players num-teams)]
+            (is (= num-teams (count teams)))
+            (is (not-any? empty? teams))))
+
+        (testing (str "Testing with full list of players and " num-teams " teams")
+          (let [teams (when (>= (count long-list-of-players) (* 2 num-teams))
+                        (logic/divide-players-into-teams assignments long-list-of-players num-teams))]
+            (is (= num-teams (count teams)))
+            (is (not-any? empty? teams))))))))
+
+(deftest test-divide-players-into-teams-by-score
+  (let [long-list-of-players (concat players players players players)
+        num-teams-list [2 3 4 5 6 7]]
+
+    (doseq [num-teams num-teams-list]
+      (let [adjusted-weights {:experience (rand)
+                              :teamplayer (rand)
+                              :adroit (rand)
+                              :mood (rand)
+                              :theme (rand)
+                              :frightened (rand)
+                              :competitiveness (rand)}
+            selected-players (take (* num-teams 3) long-list-of-players)]
+
+        (testing (str "Testing with subset of players and " num-teams " teams")
+          (let [teams (logic/divide-players-into-teams-by-score selected-players num-teams adjusted-weights)]
+            (is (= num-teams (count teams)))
+            (is (not-any? empty? teams))))
+
+        (testing (str "Testing with full list of players and " num-teams " teams")
+          (let [teams (when (>= (count long-list-of-players) (* 2 num-teams))
+                        (logic/divide-players-into-teams-by-score long-list-of-players num-teams adjusted-weights))]
+            (is (= num-teams (count teams)))
+            (is (not-any? empty? teams))))))))
+
+
+
+
+
