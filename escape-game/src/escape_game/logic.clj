@@ -362,8 +362,7 @@
                               randomly-teams)]
       (println team))))
 
-(def room-for-test
-  {:horror 2 :linear 1 :tech 1 :knowledge 2})
+
 
 
 

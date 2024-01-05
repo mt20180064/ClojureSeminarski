@@ -18,14 +18,42 @@
    {:name "Cole" :experience 4 :teamplayer 1 :adroit 5 :mood 1 :theme 1 :frightened 1 :competitiveness 1}
    {:name "Bebinger" :experience 1 :teamplayer 1 :adroit 4 :mood 5 :theme 2 :frightened 2 :competitiveness 1}])
 
-(def room-for-test
-  {:horror 2 :linear 1 :tech 1 :knowledge 2})
+
+(def combination-of-rooms 
+  [{:horror 1 :linear 1 :tech 1 :knowledge 1}
+   {:horror 1 :linear 1 :tech 1 :knowledge 2}
+   {:horror 1 :linear 1 :tech 2 :knowledge 1}
+   {:horror 1 :linear 2 :tech 1 :knowledge 2}
+   {:horror 2 :linear 1 :tech 1 :knowledge 1}
+   {:horror 1 :linear 2 :tech 1 :knowledge 2}
+   {:horror 1 :linear 2 :tech 2 :knowledge 1}
+   {:horror 2 :linear 2 :tech 1 :knowledge 1}
+   {:horror 2 :linear 1 :tech 2 :knowledge 1}
+   {:horror 2 :linear 1 :tech 1 :knowledge 2}
+   {:horror 1 :linear 1 :tech 2 :knowledge 2}
+   {:horror 2 :linear 2 :tech 1 :knowledge 2}
+   {:horror 2 :linear 2 :tech 2 :knowledge 1}
+   {:horror 2 :linear 1 :tech 2 :knowledge 2}
+   {:horror 1 :linear 2 :tech 2 :knowledge 2}
+   {:horror 2 :linear 2 :tech 2 :knowledge 2}])
 
 
 (deftest test-round-robin-distribute
-  (doseq [num-teams [2 3 4 5 6 7]]
-    (testing (str "Testing round-robin distribution with " num-teams " teams")
-      (let [teams (logic/round-robin-distribute players room-for-test num-teams)]
-        (is (= num-teams (count teams)))
-        (doseq [team teams]
-          (println "Team:" team))))))
+  (let [long-list-of-players (concat players players players players) 
+        num-teams-list [2 3 4 5 6 7]] 
+    (doseq [num-teams num-teams-list
+            room-data combination-of-rooms]
+      (let [selected-players (take (* num-teams 3) long-list-of-players)] 
+        (testing (str "Testing with subset of players, " num-teams " teams, and room data " room-data)
+          (let [teams (logic/round-robin-distribute selected-players room-data num-teams)]
+            (is (= num-teams (count teams)))
+            (is (not-any? empty? teams)))))) 
+    (doseq [num-teams num-teams-list
+            room-data combination-of-rooms]
+      (testing (str "Testing with full list of players, " num-teams " teams, and room data " room-data)
+        (let [teams (when (>= (count long-list-of-players) (* 2 num-teams))
+                      (logic/round-robin-distribute long-list-of-players room-data num-teams))]
+          (is (= num-teams (count teams)))
+          (is (not-any? empty? teams))
+          (when (< (count long-list-of-players) (* 2 num-teams))
+            (is (nil? (logic/round-robin-distribute long-list-of-players room-data num-teams)))))))))

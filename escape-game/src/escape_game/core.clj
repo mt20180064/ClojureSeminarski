@@ -108,7 +108,7 @@
   [& args]
   (let [players (players-vector-maker)
         room-data (room-data-maker (count players))]
-    (choose-and-run-algorithm logic/igraci logic/room-for-test 3)))
+    (choose-and-run-algorithm players room-data 3)))
 
   
 
