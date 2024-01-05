@@ -102,6 +102,75 @@
             (is (= num-teams (count teams)))
             (is (not-any? empty? teams))))))))
 
+(deftest test-sort-everything
+  (let [long-list-of-players (concat players players players)
+        player-counts [5 10 15 (count long-list-of-players)]]
+    (doseq [player-count player-counts]
+      (let [selected-players (take player-count long-list-of-players)]
+        (testing (str "Testing sort-everything with " player-count " players")
+          (let [sorted-players (logic/sort-everything selected-players)]
+            (is (= player-count (count sorted-players)))
+            (is (apply <= (map :summary sorted-players)))))))))
+
+
+(deftest test-distribute-players-across-teams
+  (let [long-list-of-players (concat players players players)
+        num-teams-list [2 3 4 5 6 7]]
+
+    (doseq [num-teams num-teams-list]
+      (let [selected-players (take (* 3 num-teams) long-list-of-players)
+            sorted-players (logic/sort-everything selected-players)]
+
+        (testing (str "Testing distribute-players-across-teams with sorted " (count sorted-players) " players and " num-teams " teams")
+          (let [teams (logic/distribute-players-across-teams sorted-players nil num-teams)]
+            (is (= num-teams (count teams)))
+            (is (not-any? empty? teams))))))))
+
+(deftest test-calculate-coef
+  (let [sample-players (take 5 (shuffle players))] 
+
+    (doseq [player sample-players
+            room-data combination-of-rooms]
+      (testing (str "Testing calculate-coef with player " (:name player) " and room data " room-data)
+        (let [coef (logic/calculate-coef player room-data)] 
+          (is (number? coef)))))))
+
+(def long-list-of-players
+  [concat players players players])
+
+(deftest test-calculate-threshold
+  (let [sample-players (take 10 (shuffle long-list-of-players)) 
+        num-teams 2]
+
+    (doseq [room-data combination-of-rooms]
+      (let [teams (logic/distribute-players-randomly sample-players room-data num-teams)
+            threshold (logic/calculate-threshold room-data teams)]
+
+        (testing (str "Testing calculate-threshold with room data " room-data) 
+          (is (number? threshold))
+          (is (>= threshold 0))))))) 
+
+
+(deftest test-adjust-weights-based-on-room
+  (let [random-room-configs (take 5 (shuffle combination-of-rooms))] 
+
+    (doseq [room-data random-room-configs]
+      (testing (str "Testing adjust-weights-based-on-room with room data " room-data)
+        (let [adjusted-weights (logic/adjust-weights-based-on-room room-data)
+              base-weights {:experience 0.4, :adroit 0.35, :mood 0.3, :teamplayer 0.25, :competitiveness 0.2, :theme 0.15, :frightened 0.1}] 
+          (is (= (keys base-weights) (keys adjusted-weights))) 
+          )))))
+
+
+
+
+
+
+
+
+
+
+
 
 
 

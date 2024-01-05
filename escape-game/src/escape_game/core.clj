@@ -108,7 +108,7 @@
   [& args]
   (let [players (players-vector-maker)
         room-data (room-data-maker (count players))]
-    (choose-and-run-algorithm players room-data 3)))
+    (choose-and-run-algorithm players room-data (:division room-data))))
 
   
 
